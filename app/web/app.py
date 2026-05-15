@@ -18,6 +18,7 @@ def create_web_app(config: DatabaseConfig) -> Flask:
     )
     app.config["DATABASE_CONFIG"] = config
     app.config["SECRET_KEY"] = load_app_secret_key()
+    app.config['JSON_AS_ASCII'] = False
 
     @app.before_request
     def before_request() -> None:
