@@ -1,13 +1,7 @@
+import os
+
 from app.config import load_database_config
-from app.infrastructure.database import create_connection
-from app.repositories.client_repository import ClientRepository
-from app.repositories.component_repository import ComponentRepository
-from app.repositories.order_repository import OrderRepository
-from app.repositories.pc_build_repository import PcBuildRepository
-from app.services.client_service import ClientService
-from app.services.order_service import OrderService
-from app.services.pc_build_service import PcBuildService
-from app.ui.console_app import ConsoleApp
+from app.web.app import create_web_app
 
 
 def main() -> None:
@@ -17,29 +11,12 @@ def main() -> None:
         print(error)
         return
 
-    connection = create_connection(database_config)
-    if connection is None:
-        return
-
-    try:
-        client_repository = ClientRepository(connection)
-        component_repository = ComponentRepository(connection)
-        pc_build_repository = PcBuildRepository(connection)
-        order_repository = OrderRepository(connection)
-
-        client_service = ClientService(client_repository)
-        pc_build_service = PcBuildService(component_repository, pc_build_repository)
-        order_service = OrderService(
-            client_repository,
-            component_repository,
-            pc_build_repository,
-            order_repository,
-        )
-
-        app = ConsoleApp(client_service, pc_build_service, order_service)
-        app.run()
-    finally:
-        connection.close()
+    app = create_web_app(database_config)
+    app.run(
+        host=os.getenv("APP_HOST", "127.0.0.1"),
+        port=int(os.getenv("APP_PORT", "5000")),
+        debug=os.getenv("FLASK_DEBUG") == "1",
+    )
 
 
 if __name__ == "__main__":

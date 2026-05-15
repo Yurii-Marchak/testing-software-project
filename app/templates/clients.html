@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Клієнти | PC Build Manager{% endblock %}
+{% block page_title %}Клієнти{% endblock %}
+{% block page_pill %}CUSTOMERS{% endblock %}
+{% block topbar_actions %}
+    <button class="btn btn-primary" type="button" data-open-modal="client-modal">+ Новий клієнт</button>
+{% endblock %}
+
+{% block content %}
+<section class="helper-strip">
+    <div class="helper-card">
+        <strong>Швидкий сценарій</strong>
+        <p>Зареєструйте клієнта через модальне вікно, а далі використовуйте пошук і сортування в таблиці нижче.</p>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-head">
+        <span class="card-icon">👤</span>
+        <div class="card-title">Список клієнтів</div>
+        <div class="toolbar">
+            <div class="toolbar-field">
+                <label for="clients-search">Пошук</label>
+                <input id="clients-search" type="search" placeholder="Пошук за ПІБ, email або телефоном" data-table-filter="clients-table">
+            </div>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table id="clients-table" class="sortable-table" data-page-size="8">
+            <thead>
+                <tr>
+                    <th data-sort="number">#</th>
+                    <th data-sort="text">ПІБ</th>
+                    <th data-sort="text">Дата народження</th>
+                    <th data-sort="text">Email</th>
+                    <th data-sort="text">Телефон</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td data-label="#" data-sort-value="{{ client.client_id }}"><span class="id-badge">#{{ client.client_id }}</span></td>
+                        <td data-label="ПІБ">{{ client.full_name }}</td>
+                        <td data-label="Дата народження" data-sort-value="{{ client.birth_date }}"><span class="mono-val">{{ client.birth_date }}</span></td>
+                        <td data-label="Email">{{ client.email }}</td>
+                        <td data-label="Телефон"><span class="mono-val">{{ client.phone }}</span></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-icon">👤</div>
+                                <p>Клієнтів ще немає. Почніть із кнопки “Новий клієнт”.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script id="clients-json" type="application/json">{{ clients_json|tojson }}</script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="client-modal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Клієнти</div>
+                <h2 class="modal-title" id="client-modal-title">Реєстрація клієнта</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
+        </div>
+        <form method="post" class="modal-body form-grid cols1">
+            <div class="form-group full">
+                <label for="full_name">Повне ПІБ</label>
+                <input id="full_name" name="full_name" type="text" required>
+            </div>
+            <div class="form-group">
+                <label for="birth_date">Дата народження</label>
+                <input id="birth_date" name="birth_date" type="date" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Телефон</label>
+                <input id="phone" name="phone" type="text" value="{{ preset_phone }}" required>
+            </div>
+            <div class="form-group full">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
+                <button class="btn btn-primary" type="submit">Зареєструвати клієнта</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block mobile_fab %}
+<button class="mobile-fab" type="button" data-open-modal="client-modal" aria-label="Додати клієнта">+</button>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Замовлення | PC Build Manager{% endblock %}
+{% block page_title %}Замовлення{% endblock %}
+{% block page_pill %}ORDERS{% endblock %}
+{% block topbar_actions %}
+    <button class="btn btn-primary" type="button" data-open-modal="order-modal">+ Нове замовлення</button>
+{% endblock %}
+
+{% block content %}
+<div class="stack-grid">
+    <section class="card">
+        <div class="card-head">
+            <span class="card-icon">🔍</span>
+            <div class="card-title">Пошук клієнта за телефоном</div>
+            <div class="toolbar">
+                <div class="toolbar-field">
+                    <label for="phone_query">Телефон</label>
+                    <input id="phone_query" type="search" name="phone_query" value="{{ phone_query }}" placeholder="+380501234567" data-phone-autosearch>
+                </div>
+            </div>
+        </div>
+        <div class="inner-pad">
+            <form method="post" id="phone-search-form">
+                <input type="hidden" name="action" value="search">
+                <input type="hidden" name="phone_query" value="{{ phone_query }}">
+            </form>
+
+            {% if show_register_prompt %}
+                <div class="register-prompt visible">
+                    <div class="alert alert-warn" style="margin:0;flex:1">Клієнта не знайдено. Зареєструйте нового користувача та поверніться до оформлення.</div>
+                    <a class="btn btn-primary btn-sm" href="{{ register_url }}">Реєстрація</a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="table-wrap">
+            <table id="order-clients-table" class="sortable-table" data-page-size="6">
+                <thead>
+                    <tr>
+                        <th data-sort="number">#</th>
+                        <th data-sort="text">ПІБ</th>
+                        <th data-sort="text">Телефон</th>
+                        <th data-sort="text">Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td data-label="#" data-sort-value="{{ client.client_id }}"><span class="id-badge">#{{ client.client_id }}</span></td>
+                            <td data-label="ПІБ">{{ client.full_name }}</td>
+                            <td data-label="Телефон"><span class="mono-val">{{ client.phone }}</span></td>
+                            <td data-label="Email">{{ client.email }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📞</div>
+                                    <p>За поточним фільтром клієнтів не знайдено</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <span class="card-icon">📋</span>
+            <div class="card-title">Усі замовлення</div>
+            <div class="toolbar">
+                <div class="toolbar-field">
+                    <label for="orders-search">Пошук</label>
+                    <input id="orders-search" type="search" placeholder="Клієнт, збірка, статус" data-table-filter="orders-table">
+                </div>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table id="orders-table" class="sortable-table" data-page-size="8">
+                <thead>
+                    <tr>
+                        <th data-sort="number">#</th>
+                        <th data-sort="text">Клієнт</th>
+                        <th data-sort="text">Збірка</th>
+                        <th data-sort="text">Дата</th>
+                        <th data-sort="number">Дні</th>
+                        <th data-sort="text">Оплата</th>
+                        <th data-sort="text">Статус</th>
+                        <th data-sort="number">Сума</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td data-label="#" data-sort-value="{{ order.order_id }}"><span class="id-badge">#{{ order.order_id }}</span></td>
+                            <td data-label="Клієнт">{{ order.client_name }}</td>
+                            <td data-label="Збірка">{{ order.build_label }}</td>
+                            <td data-label="Дата" data-sort-value="{{ order.order_date }}"><span class="mono-val">{{ order.order_date }}</span></td>
+                            <td data-label="Дні" data-sort-value="{{ order.production_time }}">{{ order.production_time }}</td>
+                            <td data-label="Оплата">
+                                {% if order.payment_status == "Сплачено" %}
+                                    <span class="badge badge-paid">Сплачено</span>
+                                {% else %}
+                                    <span class="badge badge-unpaid">Не сплачено</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Статус">
+                                {% if order.order_status == "Готово" %}
+                                    <span class="badge badge-done">Готово</span>
+                                {% else %}
+                                    <span class="badge badge-pending">Не готово</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Сума" data-sort-value="{{ order.due_amount }}"><span class="price-val">{{ "%.2f"|format(order.due_amount) }} грн</span></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📋</div>
+                                    <p>Замовлень ще немає. Створіть перше замовлення через модальне вікно.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% if receipt %}
+        <section class="card">
+            <div class="card-head">
+                <span class="card-icon">₴</span>
+                <div class="card-title">Чек останньої операції</div>
+            </div>
+            <div class="receipt-block">
+                {% if selected_client %}
+                    <div class="receipt-row"><span>Клієнт</span><span>{{ selected_client.full_name }}</span></div>
+                {% endif %}
+                {% for component_name, component_data in receipt.components %}
+                    <div class="receipt-row">
+                        <span>{{ component_name }}</span>
+                        <span>{{ component_data | join(", ") }}</span>
+                    </div>
+                {% endfor %}
+                <div class="receipt-row total">
+                    <span>Загальна ціна</span>
+                    <span>{{ "%.2f"|format(receipt.total_price) }} грн</span>
+                </div>
+                <div class="receipt-row total">
+                    <span>Сума до сплати</span>
+                    <span>{{ "%.2f"|format(receipt.due_amount) }} грн</span>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+</div>
+
+<script id="clients-json" type="application/json">{{ clients_json|tojson }}</script>
+<script id="builds-json" type="application/json">{{ builds_json|tojson }}</script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="order-modal" aria-hidden="true">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Замовлення</div>
+                <h2 class="modal-title" id="order-modal-title">Нове замовлення</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
+        </div>
+        <form method="post" class="modal-body form-grid cols1" id="order-form">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="phone_query" value="{{ phone_query }}">
+
+            <div class="form-group full">
+                <label for="order-client-id">Клієнт</label>
+                <select id="order-client-id" name="client_id" required data-order-control="client_id">
+                    <option value="">— Оберіть клієнта —</option>
+                    {% for client in clients %}
+                        <option value="{{ client.client_id }}">#{{ client.client_id }} · {{ client.full_name }} · {{ client.phone }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group full">
+                <label for="order-build-id">Збірка ПК</label>
+                <select id="order-build-id" name="pc_build_id" required data-order-control="pc_build_id">
+                    <option value="">— Оберіть збірку —</option>
+                    {% for build in builds %}
+                        <option value="{{ build.build_id }}">{{ build.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="production_time">Час зборки (днів)</label>
+                    <input id="production_time" name="production_time" type="number" min="1" step="1" required data-order-control="production_time">
+                </div>
+
+                <div class="form-group">
+                    <label for="payment_status">Статус оплати</label>
+                    <select id="payment_status" name="payment_status" required data-order-control="payment_status">
+                        <option value="">— Оберіть статус —</option>
+                        {% for status in payment_statuses %}
+                            <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group full">
+                <label for="order_status">Статус замовлення</label>
+                <select id="order_status" name="order_status" required data-order-control="order_status">
+                    <option value="">— Оберіть статус —</option>
+                    {% for status in order_statuses %}
+                        <option value="{{ status }}">{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="preview-card" id="order-preview">
+                <div class="preview-title">Попередній перегляд замовлення</div>
+                <div class="preview-empty">Оберіть клієнта, збірку та статус оплати, щоб побачити підсумок і суму до сплати.</div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
+                <button class="btn btn-primary" type="submit">Оформити замовлення</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block mobile_fab %}
+<button class="mobile-fab" type="button" data-open-modal="order-modal" aria-label="Додати замовлення">+</button>
+{% endblock %}

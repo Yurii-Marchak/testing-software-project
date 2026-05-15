@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Збірки ПК | PC Build Manager{% endblock %}
+{% block page_title %}Збірки ПК{% endblock %}
+{% block page_pill %}BUILDS{% endblock %}
+{% block topbar_actions %}
+    <button class="btn btn-primary" type="button" data-open-modal="build-modal">+ Нова збірка</button>
+{% endblock %}
+
+{% block content %}
+<section class="helper-strip">
+    <div class="helper-card">
+        <strong>Live-preview</strong>
+        <p>У модальному вікні система одразу покаже орієнтовну ціну збірки та попередить про можливу несумісність RAM або недостатню потужність блока живлення.</p>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-head">
+        <span class="card-icon">🧩</span>
+        <div class="card-title">Доступні збірки</div>
+        <div class="toolbar">
+            <div class="toolbar-field">
+                <label for="builds-search">Пошук</label>
+                <input id="builds-search" type="search" placeholder="Пошук за типом або комплектуючими" data-table-filter="builds-table">
+            </div>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table id="builds-table" class="sortable-table" data-page-size="8">
+            <thead>
+                <tr>
+                    <th data-sort="number">#</th>
+                    <th data-sort="text">Тип</th>
+                    <th data-sort="text">GPU</th>
+                    <th data-sort="text">CPU</th>
+                    <th data-sort="text">Материнська</th>
+                    <th data-sort="text">RAM</th>
+                    <th data-sort="text">PSU</th>
+                    <th data-sort="text">Корпус</th>
+                    <th data-sort="number">Ціна</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for build in builds %}
+                    <tr>
+                        <td data-label="#" data-sort-value="{{ build.build_id }}"><span class="id-badge">#{{ build.build_id }}</span></td>
+                        <td data-label="Тип"><span class="badge badge-type">{{ build.build_type }}</span></td>
+                        <td data-label="GPU">{{ build.gpu_name }}</td>
+                        <td data-label="CPU">{{ build.cpu_name }}</td>
+                        <td data-label="Материнська">{{ build.motherboard_name }}</td>
+                        <td data-label="RAM">{{ build.ram_name }}</td>
+                        <td data-label="PSU">{{ build.psu_name }}</td>
+                        <td data-label="Корпус">{{ build.pc_case_name }}</td>
+                        <td data-label="Ціна" data-sort-value="{{ build.total_price }}"><span class="price-val">{{ "%.2f"|format(build.total_price) }} грн</span></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-icon">⚙️</div>
+                                <p>Збірок ще немає. Створіть першу конфігурацію через кнопку “Нова збірка”.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script id="build-catalog-json" type="application/json">{{ build_catalog_json|tojson }}</script>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="build-modal" aria-hidden="true">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="build-modal-title">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Збірки</div>
+                <h2 class="modal-title" id="build-modal-title">Нова збірка ПК</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
+        </div>
+        <form method="post" class="modal-body">
+            <div class="comp-select-grid">
+                {% for field_name, label, table_key in [
+                    ("gpu_id", "GPU", "GPU"),
+                    ("cpu_id", "CPU", "CPU"),
+                    ("motherboard_id", "Материнська плата", "Motherboard"),
+                    ("ram_id", "RAM", "RAM"),
+                    ("psu_id", "Блок живлення", "PSU"),
+                    ("pc_case_id", "Корпус", "PC_Case")
+                ] %}
+                    <div class="form-group">
+                        <label for="{{ field_name }}">{{ label }}</label>
+                        <select id="{{ field_name }}" name="{{ field_name }}" required data-build-control="{{ field_name }}">
+                            <option value="">— Оберіть {{ label.lower() }} —</option>
+                            {% for option in component_options[table_key] %}
+                                <option value="{{ option.component_id }}">{{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label for="build_type">Тип збірки</label>
+                    <input id="build_type" name="build_type" type="text" placeholder="Наприклад: Ігрова" required data-build-control="build_type">
+                </div>
+            </div>
+
+            <div class="preview-card" id="build-preview">
+                <div class="preview-title">Попередній перегляд збірки</div>
+                <div class="preview-empty">Оберіть комплектуючі, щоб побачити ціну, склад і перевірки сумісності.</div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
+                <button class="btn btn-primary" type="submit">Створити збірку</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block mobile_fab %}
+<button class="mobile-fab" type="button" data-open-modal="build-modal" aria-label="Додати збірку">+</button>
+{% endblock %}

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PC Build Manager{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Перейти до основного вмісту</a>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="shell shell-loading" id="app-shell">
+        <aside class="sidebar" id="sidebar" aria-label="Основна навігація">
+            <div class="brand">
+                <div class="brand-mark">
+                    <div class="brand-icon" aria-hidden="true">PC</div>
+                    <div>
+                        <div class="brand-name">PC Build<br>Manager</div>
+                        <div class="brand-ver">web interface</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <div class="nav-label">Головне</div>
+                <a class="nav-item {% if current_path == '/' %}active{% endif %}" href="{{ url_for('home') }}">
+                    <div class="nav-icon" aria-hidden="true">📊</div>
+                    <span class="nav-text">Дашборд</span>
+                </a>
+                <a class="nav-item {% if current_path == '/orders' %}active{% endif %}" href="{{ url_for('orders') }}">
+                    <div class="nav-icon" aria-hidden="true">📋</div>
+                    <span class="nav-text">Замовлення</span>
+                </a>
+                <div class="nav-label">Дані</div>
+                <a class="nav-item {% if current_path == '/clients' %}active{% endif %}" href="{{ url_for('clients') }}">
+                    <div class="nav-icon" aria-hidden="true">👤</div>
+                    <span class="nav-text">Клієнти</span>
+                </a>
+                <a class="nav-item {% if current_path == '/builds' %}active{% endif %}" href="{{ url_for('builds') }}">
+                    <div class="nav-icon" aria-hidden="true">⚙️</div>
+                    <span class="nav-text">Збірки ПК</span>
+                </a>
+                <a class="nav-item {% if current_path == '/components' %}active{% endif %}" href="{{ url_for('components') }}">
+                    <div class="nav-icon" aria-hidden="true">🔩</div>
+                    <span class="nav-text">Комплектуючі</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">© 2026 PC Build Manager</div>
+        </aside>
+
+        <main class="main" id="main-content">
+            <div class="topbar">
+                <button class="hamburger" onclick="openSidebar()" aria-label="Відкрити меню">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="17" y2="6"></line>
+                        <line x1="3" y1="10" x2="17" y2="10"></line>
+                        <line x1="3" y1="14" x2="17" y2="14"></line>
+                    </svg>
+                </button>
+                <div class="topbar-title">{% block page_title %}PC Build Manager{% endblock %}</div>
+                <span class="topbar-pill">{% block page_pill %}CONTROL PANEL{% endblock %}</span>
+                <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+            </div>
+
+            <div class="content">
+                <div class="sr-only" aria-live="polite" id="aria-live-region"></div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <section class="flash-stack js-flash-stack" aria-hidden="true">
+                            {% for category, message in messages %}
+                                <div class="flash flash-{{ category }}" data-flash-category="{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+
+            {% block mobile_fab %}{% endblock %}
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    {% block modals %}{% endblock %}
+
+    <script>
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebar-overlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

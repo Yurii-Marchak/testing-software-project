@@ -32,6 +32,11 @@ class PcBuildRepository:
             cursor.execute("SELECT * FROM PC_Build")
             return cursor.fetchall()
 
+    def get_by_id(self, build_id: int) -> tuple | None:
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM PC_Build WHERE id = %s", (build_id,))
+            return cursor.fetchone()
+
     def get_total_price(self, build_id: int) -> float | None:
         with self.connection.cursor() as cursor:
             cursor.execute("SELECT total_price FROM PC_Build WHERE id = %s", (build_id,))

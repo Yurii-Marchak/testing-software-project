@@ -36,3 +36,13 @@ class OrderRepository:
         with self.connection.cursor() as cursor:
             cursor.execute(query, params)
         self.connection.commit()
+
+    def list_all(self) -> tuple[tuple, ...]:
+        query = """
+            SELECT id, client_id, pc_build_id, production_time, order_date, payment_status, due_amount, order_status
+            FROM order_journal
+            ORDER BY order_date DESC, id DESC
+        """
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchall()

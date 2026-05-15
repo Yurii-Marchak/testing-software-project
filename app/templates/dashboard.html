@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд | PC Build Manager{% endblock %}
+{% block page_title %}Дашборд{% endblock %}
+{% block page_pill %}OVERVIEW{% endblock %}
+{% block topbar_actions %}
+    <a class="btn btn-primary" href="{{ url_for('orders') }}">Перейти до замовлень</a>
+{% endblock %}
+
+{% block content %}
+<section class="stats-grid">
+    <article class="stat-card s1">
+        <div class="stat-card-glow"></div>
+        <div class="stat-icon">📋</div>
+        <div class="stat-label">Замовлень</div>
+        <div class="stat-value">{{ stats.orders_count }}</div>
+        <div class="stat-sub">Всього в системі</div>
+    </article>
+    <article class="stat-card s2">
+        <div class="stat-card-glow"></div>
+        <div class="stat-icon">👤</div>
+        <div class="stat-label">Клієнтів</div>
+        <div class="stat-value">{{ stats.clients_count }}</div>
+        <div class="stat-sub">Зареєстровано</div>
+    </article>
+    <article class="stat-card s3">
+        <div class="stat-card-glow"></div>
+        <div class="stat-icon">⚙️</div>
+        <div class="stat-label">Збірок ПК</div>
+        <div class="stat-value">{{ stats.builds_count }}</div>
+        <div class="stat-sub">Готових конфігурацій</div>
+    </article>
+    <article class="stat-card s4">
+        <div class="stat-card-glow"></div>
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-label">Не сплачено</div>
+        <div class="stat-value">{{ stats.unpaid_count }}</div>
+        <div class="stat-sub">Потребують уваги</div>
+    </article>
+</section>
+
+<section class="card">
+    <div class="card-head">
+        <span class="card-icon">📋</span>
+        <div class="card-title">Останні замовлення</div>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('orders') }}">Усі замовлення</a>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Клієнт</th>
+                    <th>Збірка</th>
+                    <th>Дата</th>
+                    <th>Дні</th>
+                    <th>Оплата</th>
+                    <th>Статус</th>
+                    <th>Сума</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                    <tr>
+                        <td data-label="#"><span class="id-badge">#{{ order.order_id }}</span></td>
+                        <td data-label="Клієнт">{{ order.client_name }}</td>
+                        <td data-label="Збірка">{{ order.build_label }}</td>
+                        <td data-label="Дата"><span class="mono-val">{{ order.order_date }}</span></td>
+                        <td data-label="Дні">{{ order.production_time }}</td>
+                        <td data-label="Оплата">
+                            {% if order.payment_status == "Сплачено" %}
+                                <span class="badge badge-paid">Сплачено</span>
+                            {% else %}
+                                <span class="badge badge-unpaid">Не сплачено</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Статус">
+                            {% if order.order_status == "Готово" %}
+                                <span class="badge badge-done">Готово</span>
+                            {% else %}
+                                <span class="badge badge-pending">Не готово</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Сума"><span class="price-val">{{ "%.2f"|format(order.due_amount) }} грн</span></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-icon">📋</div>
+                                <p>Замовлень ще немає</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block mobile_fab %}
+<a class="mobile-fab" href="{{ url_for('orders') }}" aria-label="Перейти до замовлень">+</a>
+{% endblock %}

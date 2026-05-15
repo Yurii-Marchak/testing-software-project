@@ -28,6 +28,11 @@ def load_database_config() -> DatabaseConfig:
     )
 
 
+def load_app_secret_key() -> str:
+    _load_dotenv()
+    return _normalize_env_value(os.getenv("APP_SECRET_KEY", "pc-build-studio-local"))
+
+
 def _load_dotenv() -> None:
     env_path = Path(".env")
     if not env_path.exists():

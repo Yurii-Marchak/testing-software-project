@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.exceptions import ApplicationError
-from app.models import OrderReceipt, OrderRequest
+from app.models import DashboardStats, OrderReceipt, OrderRequest, OrderSummary
 from app.repositories.client_repository import ClientRepository
 from app.repositories.component_repository import ComponentRepository
 from app.repositories.order_repository import OrderRepository
@@ -10,6 +10,8 @@ from app.repositories.pc_build_repository import PcBuildRepository
 
 class OrderService:
     COMPONENT_NAMES = ("GPU", "CPU", "Motherboard", "RAM", "PSU", "PC_Case")
+    PAYMENT_STATUSES = ("Сплачено", "Не сплачено")
+    ORDER_STATUSES = ("Готово", "Не готово")
     UNPAID_STATUS = "Не сплачено"
 
     def __init__(
@@ -24,26 +26,60 @@ class OrderService:
         self.pc_build_repository = pc_build_repository
         self.order_repository = order_repository
 
-    def list_builds(self) -> tuple[tuple, ...]:
-        return self.pc_build_repository.list_all()
+    def list_orders(self) -> list[OrderSummary]:
+        orders = []
+        for row in self.order_repository.list_all():
+            client = self.client_repository.get_by_id(int(row[1]))
+            build = self.pc_build_repository.get_by_id(int(row[2]))
+            build_label = "—"
+            if build is not None:
+                gpu = self.component_repository.get_by_id("GPU", int(build[1]))
+                gpu_name = gpu[3] if gpu else "GPU"
+                build_label = f"{build[8]} · {gpu_name}"
+            orders.append(
+                OrderSummary(
+                    order_id=int(row[0]),
+                    client_name=client[1] if client else "—",
+                    build_label=build_label,
+                    order_date=str(row[4]),
+                    production_time=int(row[3]),
+                    payment_status=str(row[5]),
+                    due_amount=float(row[6]),
+                    order_status=str(row[7]),
+                )
+            )
+        return orders
+
+    def build_dashboard_stats(self, clients_count: int, builds_count: int) -> DashboardStats:
+        orders = self.list_orders()
+        unpaid_count = sum(1 for order in orders if order.payment_status == self.UNPAID_STATUS)
+        return DashboardStats(
+            orders_count=len(orders),
+            clients_count=clients_count,
+            builds_count=builds_count,
+            unpaid_count=unpaid_count,
+        )
 
     def create_order(self, order_request: OrderRequest) -> OrderReceipt:
-        client_id = self.client_repository.get_id_by_name_and_phone(
-            order_request.client_name,
-            order_request.client_phone,
-        )
-        if client_id is None:
-            raise ApplicationError("Клієнта не знайдено. Спочатку зареєструйте його.")
+        if self.client_repository.get_by_id(order_request.client_id) is None:
+            raise ApplicationError("Клієнта не знайдено. Зареєструйте клієнта та повторіть спробу.")
 
         total_price = self.pc_build_repository.get_total_price(order_request.pc_build_id)
         if total_price is None:
             raise ApplicationError("Збірку ПК з таким ID не знайдено.")
 
+        if order_request.production_time < 1:
+            raise ApplicationError("Час зборки має бути більшим за нуль.")
+        if order_request.payment_status not in self.PAYMENT_STATUSES:
+            raise ApplicationError("Оберіть коректний статус оплати.")
+        if order_request.order_status not in self.ORDER_STATUSES:
+            raise ApplicationError("Оберіть коректний статус замовлення.")
+
         due_amount = total_price if order_request.payment_status == self.UNPAID_STATUS else 0.0
         order_date = date.today()
 
         self.order_repository.create(
-            client_id=client_id,
+            client_id=order_request.client_id,
             pc_build_id=order_request.pc_build_id,
             production_time=order_request.production_time,
             order_date=order_date,

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Комплектуючі | PC Build Manager{% endblock %}
+{% block page_title %}Комплектуючі{% endblock %}
+{% block page_pill %}CATALOG{% endblock %}
+
+{% block content %}
+{% set component_sections = [
+    ("gpu", "GPU", "Відеокарти", "Оберіть продуктивну графіку для ігрових і робочих збірок.", gpu_rows, ["Модель", "Виробник", "Чіп", "Пам'ять", "Тип", "Вентилятори", "TDP", "Ціна"]),
+    ("cpu", "CPU", "Процесори", "Порівнюйте ядра, потоки та сумісність з пам'яттю.", cpu_rows, ["Модель", "Виробник", "TDP", "Ядра", "Потоки", "Техпроцес", "Base", "Turbo", "RAM", "Ціна"]),
+    ("motherboard", "MB", "Материнські плати", "Контролюйте сокет, чипсет і форм-фактор без ручного зіставлення.", motherboard_rows, ["Модель", "Виробник", "Сокет", "Чипсет", "RAM слоти", "Макс. частота", "Форм-фактор", "RAM", "Ціна"]),
+    ("ram", "RAM", "Оперативна пам'ять", "Зручно оцінюйте тип, обсяг і частоту для майбутньої збірки.", ram_rows, ["Модель", "Виробник", "Обсяг", "Частота", "Тип", "Комплект", "Ціна"]),
+    ("psu", "PSU", "Блоки живлення", "Перевіряйте потужність і сертифікацію ще до створення збірки.", psu_rows, ["Модель", "Виробник", "Потужність", "Сертифікат", "Форм-фактор", "Модульність", "Ціна"]),
+    ("cases", "CASE", "Корпуси", "Форма, охолодження й сумісність корпусу з усією конфігурацією.", case_rows, ["Модель", "Виробник", "Форм-фактор", "Скло", "Вентилятори", "Ціна"])
+] %}
+
+<section class="helper-strip">
+    <div class="helper-card">
+        <strong>Довідник комплектуючих</strong>
+        <p>Цей розділ працює як швидкий каталог: переглядайте доступні компоненти, звіряйте характеристики й повертайтеся до створення збірки вже без ручних ID та зайвих помилок.</p>
+    </div>
+    <div class="helper-card">
+        <strong>Зручна навігація</strong>
+        <p>Використовуйте короткі переходи нижче, щоб миттєво стрибнути до потрібного типу комплектуючих на великих і малих екранах.</p>
+    </div>
+</section>
+
+<section class="card section-gap">
+    <div class="card-head">
+        <span class="card-icon">#</span>
+        <div class="card-title">Швидкі переходи</div>
+    </div>
+    <div class="inner-pad quick-links">
+        {% for anchor, short_label, title, description, rows, headers in component_sections %}
+            <a class="quick-link-chip" href="#section-{{ anchor }}">
+                <span class="quick-link-label">{{ short_label }}</span>
+                <span class="quick-link-text">{{ title }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+{% for anchor, short_label, title, description, rows, headers in component_sections %}
+    <section class="card section-gap" id="section-{{ anchor }}">
+        <div class="card-head">
+            <span class="card-icon">{{ short_label }}</span>
+            <div class="card-title">{{ title }}</div>
+            <div class="section-note">{{ description }}</div>
+        </div>
+        <div class="table-wrap">
+            <table class="sortable-table" data-page-size="5">
+                <thead>
+                    <tr>
+                        {% for header in headers %}
+                            <th data-sort="{{ 'number' if header in ['TDP', 'Ядра', 'Потоки', 'Техпроцес', 'Base', 'Turbo', 'Обсяг', 'Частота', 'Комплект', 'Потужність', 'Вентилятори', 'Ціна', 'RAM слоти', 'Макс. частота'] else 'text' }}">{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            {% for value in row[1:] %}
+                                <td data-label="{{ headers[loop.index0] }}">{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ headers|length }}">
+                                <div class="empty-state">
+                                    <div class="empty-icon">{{ short_label }}</div>
+                                    <p>Для секції “{{ title }}” поки немає записів.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endfor %}
+{% endblock %}
