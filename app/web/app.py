@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from flask import Flask, flash, g, render_template, request, url_for
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 from pymysql.err import MySQLError
 
 from app.config import DatabaseConfig, load_app_secret_key
 from app.exceptions import ApplicationError
 from app.infrastructure.database import create_connection
-from app.models import ClientRegistration, OrderRequest, PcBuildRequest
+from app.models import ClientRegistration, ClientSummary, OrderReceipt, OrderRequest, PcBuildRequest
 from app.web.dependencies import ServiceContainer, build_services
 
 
@@ -55,6 +55,7 @@ def create_web_app(config: DatabaseConfig) -> Flask:
     def clients():
         services = _services()
         preset_phone = request.args.get("phone", "").strip()
+        next_target = request.args.get("next", "").strip()
 
         if request.method == "POST":
             registration = ClientRegistration(
@@ -70,6 +71,16 @@ def create_web_app(config: DatabaseConfig) -> Flask:
                 try:
                     client_id = services.client_service.register_client(registration)
                     flash(f"Клієнта успішно зареєстровано. ID: {client_id}", "success")
+                    if next_target == "orders":
+                        return redirect(
+                            url_for(
+                                "orders",
+                                phone_query=registration.phone,
+                                created_client=client_id,
+                                open_order_modal="1",
+                            )
+                        )
+                    return redirect(url_for("clients"))
                 except MySQLError as error:
                     flash(f"Не вдалося зареєструвати клієнта: {error}", "error")
 
@@ -77,16 +88,7 @@ def create_web_app(config: DatabaseConfig) -> Flask:
         return render_template(
             "clients.html",
             clients=client_rows,
-            clients_json=[
-                {
-                    "id": client.client_id,
-                    "full_name": client.full_name,
-                    "birth_date": client.birth_date,
-                    "email": client.email,
-                    "phone": client.phone,
-                }
-                for client in client_rows
-            ],
+            clients_json=_serialize_clients(client_rows),
             preset_phone=preset_phone,
         )
 
@@ -103,6 +105,7 @@ def create_web_app(config: DatabaseConfig) -> Flask:
                 try:
                     services.pc_build_service.create_build(build_request)
                     flash("Збірку ПК успішно створено.", "success")
+                    return redirect(url_for("builds"))
                 except (ApplicationError, MySQLError) as error:
                     flash(str(error), "error")
 
@@ -117,57 +120,45 @@ def create_web_app(config: DatabaseConfig) -> Flask:
     @app.route("/orders", methods=["GET", "POST"])
     def orders():
         services = _services()
-        phone_query = request.values.get("phone_query", "").strip()
-        clients_list = services.client_service.list_clients(phone_query)
+        phone_query = request.args.get("phone_query", "").strip()
+        all_clients = services.client_service.list_clients()
+        filtered_clients = _filter_clients_by_phone(all_clients, phone_query)
         builds_list = services.pc_build_service.list_builds()
         orders_list = services.order_service.list_orders()
-        receipt = None
-        selected_client = None
-        show_register_prompt = bool(phone_query and not clients_list)
+        receipt = session.pop("last_receipt", None)
+        selected_client = session.pop("last_selected_client", None)
+        created_client_id = request.args.get("created_client", "").strip()
+        open_order_modal = request.args.get("open_order_modal") == "1"
 
         if request.method == "POST":
-            action = request.form.get("action")
-            if action == "search":
-                if show_register_prompt:
-                    flash(
-                        "Клієнта з таким номером не знайдено. Ви можете зареєструвати його нижче.",
-                        "error",
-                    )
+            order_request = _parse_order_form(request.form)
+            if isinstance(order_request, str):
+                flash(order_request, "error")
             else:
-                order_request = _parse_order_form(request.form)
-                if isinstance(order_request, str):
-                    flash(order_request, "error")
-                else:
-                    try:
-                        receipt = services.order_service.create_order(order_request)
-                        selected_client = services.client_service.get_client(order_request.client_id)
-                        orders_list = services.order_service.list_orders()
-                        flash("Замовлення успішно оформлено.", "success")
-                    except (ApplicationError, MySQLError) as error:
-                        flash(str(error), "error")
+                try:
+                    created_receipt = services.order_service.create_order(order_request)
+                    created_client = services.client_service.get_client(order_request.client_id)
+                    session["last_receipt"] = _serialize_receipt(created_receipt)
+                    session["last_selected_client"] = _serialize_client(created_client) if created_client else None
+                    flash("Замовлення успішно оформлено.", "success")
+                    return redirect(url_for("orders"))
+                except (ApplicationError, MySQLError) as error:
+                    flash(str(error), "error")
 
         return render_template(
             "orders.html",
-            clients=clients_list,
+            clients=all_clients,
+            all_clients=all_clients,
             builds=builds_list,
             orders=orders_list,
             payment_statuses=services.order_service.PAYMENT_STATUSES,
             order_statuses=services.order_service.ORDER_STATUSES,
             receipt=receipt,
             phone_query=phone_query,
-            show_register_prompt=show_register_prompt,
             selected_client=selected_client,
-            register_url=url_for("clients", phone=phone_query),
-            clients_json=[
-                {
-                    "id": client.client_id,
-                    "full_name": client.full_name,
-                    "birth_date": client.birth_date,
-                    "email": client.email,
-                    "phone": client.phone,
-                }
-                for client in services.client_service.list_clients()
-            ],
+            created_client_id=created_client_id,
+            open_order_modal=open_order_modal,
+            clients_json=_serialize_clients(all_clients),
             builds_json=[
                 {
                     "id": build.build_id,
@@ -344,3 +335,54 @@ def _validate_client_form(registration: ClientRegistration) -> str | None:
     if not registration.phone:
         return "Вкажіть номер телефону клієнта."
     return None
+
+
+def _serialize_client(client: ClientSummary | None) -> dict | None:
+    if client is None:
+        return None
+    return {
+        "client_id": client.client_id,
+        "full_name": client.full_name,
+        "birth_date": client.birth_date,
+        "email": client.email,
+        "phone": client.phone,
+    }
+
+
+def _serialize_clients(clients: list[ClientSummary]) -> list[dict]:
+    return [
+        {
+            "id": client.client_id,
+            "full_name": client.full_name,
+            "birth_date": client.birth_date,
+            "email": client.email,
+            "phone": client.phone,
+        }
+        for client in clients
+    ]
+
+
+def _serialize_receipt(receipt: OrderReceipt) -> dict:
+    return {
+        "order_date": str(receipt.order_date),
+        "due_amount": receipt.due_amount,
+        "total_price": receipt.total_price,
+        "components": [
+            {"name": component_name, "values": list(component_values)}
+            for component_name, component_values in receipt.components
+        ],
+    }
+
+
+def _normalize_phone(value: str) -> str:
+    return "".join(character for character in value if character.isdigit())
+
+
+def _filter_clients_by_phone(clients: list[ClientSummary], phone_query: str) -> list[ClientSummary]:
+    normalized_query = _normalize_phone(phone_query)
+    if not normalized_query:
+        return clients
+    return [
+        client for client in clients
+        if normalized_query in _normalize_phone(client.phone)
+    ]

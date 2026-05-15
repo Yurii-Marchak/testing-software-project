@@ -8,6 +8,10 @@ function parseJsonScript(id) {
     }
 }
 
+function normalizePhone(value) {
+    return String(value || "").replace(/\D/g, "");
+}
+
 function initShellLoading() {
     window.requestAnimationFrame(() => {
         document.getElementById("app-shell")?.classList.remove("shell-loading");
@@ -254,14 +258,27 @@ function renderPaginatedTable(table) {
 
 function initPhoneAutoSearch() {
     const input = document.querySelector("[data-phone-autosearch]");
-    const form = document.getElementById("phone-search-form");
-    if (!input || !form) return;
-    let timeoutId = null;
-    input.addEventListener("input", () => {
-        form.querySelector('input[name="phone_query"]').value = input.value.trim();
-        window.clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => form.submit(), 450);
-    });
+    const table = document.getElementById("order-clients-table");
+    if (!input || !table) return;
+
+    const rows = Array.from(table.querySelectorAll("tbody tr")).filter((row) => !row.querySelector(".empty-state"));
+
+    const applyFilter = () => {
+        const normalizedQuery = normalizePhone(input.value.trim());
+
+        rows.forEach((row) => {
+            const phoneCell = row.querySelector('td[data-label="Телефон"]');
+            const normalizedPhone = normalizePhone(phoneCell?.textContent || "");
+            const matches = !normalizedQuery || normalizedPhone.includes(normalizedQuery);
+            row.dataset.filteredOut = matches ? "false" : "true";
+        });
+
+        table.dataset.currentPage = "1";
+        renderPaginatedTable(table);
+    };
+
+    input.addEventListener("input", applyFilter);
+    applyFilter();
 }
 
 function findById(items, id) {
@@ -298,7 +315,7 @@ function initBuildPreview() {
             warnings.push("Тип RAM не збігається з підтримкою материнської плати.");
         }
         if (gpu.recommended_psu_power > psu.power) {
-            warnings.push("Потужність блока живлення нижча за рекомендовану для обраної відеокарти.");
+            warnings.push("Потужність блока живлення нижча за рекомендовану для вибраної відеокарти.");
         }
 
         preview.innerHTML = `
@@ -365,10 +382,23 @@ function initOrderPreview() {
     controls.forEach((control) => control.addEventListener("change", render));
 }
 
-function initModalAutoFocusFromUrl() {
+function initClientModalFromUrl() {
     if (window.location.search.includes("phone=")) {
         const button = document.querySelector('[data-open-modal="client-modal"]');
         button?.click();
+    }
+}
+
+function initOrderModalState() {
+    const meta = document.getElementById("orders-page-meta");
+    if (!meta || meta.dataset.openOrderModal !== "1") return;
+
+    openModalById("order-modal");
+
+    const clientSelect = document.getElementById("order-client-id");
+    if (clientSelect && meta.dataset.createdClientId) {
+        clientSelect.value = meta.dataset.createdClientId;
+        clientSelect.dispatchEvent(new Event("change", { bubbles: true }));
     }
 }
 
@@ -382,5 +412,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initPhoneAutoSearch();
     initBuildPreview();
     initOrderPreview();
-    initModalAutoFocusFromUrl();
+    initClientModalFromUrl();
+    initOrderModalState();
 });

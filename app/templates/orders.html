@@ -16,22 +16,18 @@
             <div class="toolbar">
                 <div class="toolbar-field">
                     <label for="phone_query">Телефон</label>
-                    <input id="phone_query" type="search" name="phone_query" value="{{ phone_query }}" placeholder="+380501234567" data-phone-autosearch>
+                    <input
+                        id="phone_query"
+                        type="search"
+                        name="phone_query"
+                        value="{{ phone_query }}"
+                        placeholder="+380501234567"
+                        data-phone-autosearch
+                    >
                 </div>
             </div>
         </div>
         <div class="inner-pad">
-            <form method="post" id="phone-search-form">
-                <input type="hidden" name="action" value="search">
-                <input type="hidden" name="phone_query" value="{{ phone_query }}">
-            </form>
-
-            {% if show_register_prompt %}
-                <div class="register-prompt visible">
-                    <div class="alert alert-warn" style="margin:0;flex:1">Клієнта не знайдено. Зареєструйте нового користувача та поверніться до оформлення.</div>
-                    <a class="btn btn-primary btn-sm" href="{{ register_url }}">Реєстрація</a>
-                </div>
-            {% endif %}
         </div>
         <div class="table-wrap">
             <table id="order-clients-table" class="sortable-table" data-page-size="6">
@@ -140,10 +136,10 @@
                 {% if selected_client %}
                     <div class="receipt-row"><span>Клієнт</span><span>{{ selected_client.full_name }}</span></div>
                 {% endif %}
-                {% for component_name, component_data in receipt.components %}
+                {% for component in receipt.components %}
                     <div class="receipt-row">
-                        <span>{{ component_name }}</span>
-                        <span>{{ component_data | join(", ") }}</span>
+                        <span>{{ component.name }}</span>
+                        <span>{{ component.values | join(", ") }}</span>
                     </div>
                 {% endfor %}
                 <div class="receipt-row total">
@@ -158,6 +154,12 @@
         </section>
     {% endif %}
 </div>
+
+<div
+    id="orders-page-meta"
+    data-created-client-id="{{ created_client_id }}"
+    data-open-order-modal="{{ '1' if open_order_modal else '0' }}"
+></div>
 
 <script id="clients-json" type="application/json">{{ clients_json|tojson }}</script>
 <script id="builds-json" type="application/json">{{ builds_json|tojson }}</script>
@@ -175,13 +177,12 @@
         </div>
         <form method="post" class="modal-body form-grid cols1" id="order-form">
             <input type="hidden" name="action" value="create">
-            <input type="hidden" name="phone_query" value="{{ phone_query }}">
 
             <div class="form-group full">
                 <label for="order-client-id">Клієнт</label>
                 <select id="order-client-id" name="client_id" required data-order-control="client_id">
                     <option value="">— Оберіть клієнта —</option>
-                    {% for client in clients %}
+                    {% for client in all_clients %}
                         <option value="{{ client.client_id }}">#{{ client.client_id }} · {{ client.full_name }} · {{ client.phone }}</option>
                     {% endfor %}
                 </select>
