@@ -27,8 +27,6 @@
                 </div>
             </div>
         </div>
-        <div class="inner-pad">
-        </div>
         <div class="table-wrap">
             <table id="order-clients-table" class="sortable-table" data-page-size="6">
                 <thead>
@@ -44,7 +42,7 @@
                         <tr>
                             <td data-label="#" data-sort-value="{{ client.client_id }}"><span class="id-badge">#{{ client.client_id }}</span></td>
                             <td data-label="ПІБ">{{ client.full_name }}</td>
-                            <td data-label="Телефон"><span class="mono-val">{{ client.phone }}</span></td>
+                            <td data-label="Телефон" data-phone-cell="true"><span class="mono-val">{{ client.phone }}</span></td>
                             <td data-label="Email">{{ client.email }}</td>
                         </tr>
                     {% else %}
