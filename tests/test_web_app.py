@@ -190,3 +190,28 @@ def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
     assert stored_receipt["total_price"] == 55000.0
     assert stored_client is not None
     assert stored_client["client_id"] == 1
+
+
+def test_custom_404_page_is_returned(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.get("/missing-page")
+
+    assert response.status_code == 404
+    assert "404" in response.get_data(as_text=True)
+
+
+def test_custom_500_page_is_returned(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+    app.config["PROPAGATE_EXCEPTIONS"] = False
+
+    @app.get("/boom-for-test")
+    def boom_for_test():
+        raise RuntimeError("boom")
+
+    with app.test_client() as client:
+        response = client.get("/boom-for-test")
+
+    assert response.status_code == 500
+    assert "500" in response.get_data(as_text=True)

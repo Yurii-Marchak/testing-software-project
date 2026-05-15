@@ -48,6 +48,349 @@ body {
     overflow-x: hidden;
 }
 
+.error-page-body {
+    background:
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 32%),
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.12), transparent 28%),
+        var(--bg);
+    --error-accent: var(--cyan);
+    --error-accent-soft: rgba(34, 211, 238, 0.18);
+    --error-accent-soft-2: rgba(167, 139, 250, 0.14);
+    --error-chip-bg: rgba(34, 211, 238, 0.08);
+    --error-shadow: rgba(34, 211, 238, 0.22);
+}
+
+.error-theme-amber {
+    --error-accent: var(--amber);
+    --error-accent-soft: rgba(251, 191, 36, 0.18);
+    --error-accent-soft-2: rgba(251, 113, 133, 0.14);
+    --error-chip-bg: rgba(251, 191, 36, 0.08);
+    --error-shadow: rgba(251, 191, 36, 0.22);
+}
+
+.error-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.error-card {
+    width: min(720px, 100%);
+    padding: 18px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(19, 22, 29, 0.98), rgba(13, 15, 20, 0.98));
+    border: 1px solid var(--error-accent-soft);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45);
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) 1fr;
+    gap: 18px;
+    overflow: hidden;
+}
+
+.error-visual {
+    position: relative;
+    min-height: 100%;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
+        radial-gradient(circle at 30% 25%, var(--error-accent-soft), transparent 34%),
+        radial-gradient(circle at 75% 75%, var(--error-accent-soft-2), transparent 32%),
+        rgba(10, 12, 18, 0.96);
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.error-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent 85%);
+}
+
+.error-orbit {
+    position: absolute;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.error-orbit-a {
+    width: 180px;
+    height: 180px;
+    top: 28px;
+    right: -42px;
+}
+
+.error-orbit-b {
+    width: 120px;
+    height: 120px;
+    bottom: 18px;
+    left: -30px;
+}
+
+.error-code-shadow {
+    position: absolute;
+    inset: auto 18px 18px auto;
+    font-family: var(--mono);
+    font-size: clamp(56px, 8vw, 88px);
+    line-height: 0.9;
+    color: rgba(255, 255, 255, 0.04);
+    user-select: none;
+}
+
+.error-chip {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 12px;
+    border-radius: 999px;
+    background: var(--error-chip-bg);
+    border: 1px solid var(--error-accent-soft);
+    color: var(--error-accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.error-glow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(28px);
+    opacity: 0.34;
+}
+
+.error-glow-a {
+    width: 160px;
+    height: 160px;
+    top: -30px;
+    left: -24px;
+    background: var(--error-accent-soft);
+}
+
+.error-glow-b {
+    width: 140px;
+    height: 140px;
+    right: -24px;
+    bottom: -28px;
+    background: var(--error-accent-soft-2);
+}
+
+.error-illustration {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.route-line {
+    fill: none;
+    stroke: url(#routeStroke);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 10 14;
+    opacity: 0.92;
+}
+
+.route-node {
+    fill: rgba(13, 15, 20, 0.95);
+    stroke: rgba(255, 255, 255, 0.14);
+    stroke-width: 4;
+}
+
+.route-node-start {
+    stroke: #22d3ee;
+}
+
+.route-node-end {
+    stroke: #a78bfa;
+}
+
+.route-node-lost {
+    stroke: #fb7185;
+    filter: drop-shadow(0 0 14px rgba(251, 113, 133, 0.35));
+}
+
+.route-radar {
+    fill: rgba(34, 211, 238, 0.08);
+    stroke: rgba(34, 211, 238, 0.48);
+    stroke-width: 3;
+}
+
+.route-radar-core {
+    fill: rgba(167, 139, 250, 0.2);
+    stroke: rgba(255, 255, 255, 0.22);
+    stroke-width: 2;
+}
+
+.route-search {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.82);
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.route-panel {
+    fill: rgba(255, 255, 255, 0.04);
+    stroke: rgba(34, 211, 238, 0.22);
+    stroke-width: 2;
+}
+
+.server-block,
+.server-core {
+    fill: rgba(255, 255, 255, 0.045);
+    stroke: rgba(251, 191, 36, 0.28);
+    stroke-width: 2;
+}
+
+.server-block.dim {
+    fill: rgba(255, 255, 255, 0.03);
+    stroke: rgba(255, 255, 255, 0.12);
+}
+
+.server-line {
+    fill: rgba(255, 255, 255, 0.24);
+}
+
+.server-line.faint {
+    fill: rgba(255, 255, 255, 0.14);
+}
+
+.server-led {
+    fill: rgba(255, 255, 255, 0.12);
+}
+
+.server-led.warn {
+    fill: #fbbf24;
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.35));
+}
+
+.server-led.hot {
+    fill: #fb7185;
+    filter: drop-shadow(0 0 10px rgba(251, 113, 133, 0.35));
+}
+
+.spark-line {
+    fill: none;
+    stroke: url(#serverStroke);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.spark-core {
+    fill: rgba(251, 191, 36, 0.16);
+    stroke: #fbbf24;
+    stroke-width: 4;
+}
+
+.error-svg-label,
+.error-svg-caption {
+    fill: rgba(255, 255, 255, 0.78);
+    font-family: var(--mono);
+}
+
+.error-svg-label {
+    font-size: 16px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.error-svg-label.alt {
+    fill: rgba(255, 255, 255, 0.88);
+}
+
+.error-svg-caption {
+    font-size: 14px;
+    opacity: 0.84;
+}
+
+.error-content {
+    padding: 20px 16px 20px 6px;
+}
+
+.error-eyebrow {
+    color: var(--error-accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.error-code {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(52px, 10vw, 96px);
+    line-height: 0.95;
+    margin-bottom: 14px;
+    text-shadow: 0 0 28px var(--error-shadow);
+}
+
+.error-title {
+    margin: 0 0 14px;
+    font-size: clamp(28px, 5vw, 42px);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+}
+
+.error-copy {
+    margin: 0 0 26px;
+    color: var(--text-2);
+    font-size: 16px;
+    max-width: 56ch;
+}
+
+.error-detail-list {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 26px;
+}
+
+.error-detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--text-2);
+    font-size: 14px;
+}
+
+.error-detail-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 7px;
+    border-radius: 999px;
+    background: var(--error-accent);
+    box-shadow: 0 0 16px var(--error-shadow);
+    flex-shrink: 0;
+}
+
+.error-note {
+    margin: 0 0 24px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .skip-link {
     position: absolute;
     left: 16px;
@@ -1275,5 +1618,48 @@ select:focus {
 
     .pagination-actions .btn {
         flex: 1;
+    }
+
+    .error-card {
+        padding: 14px;
+        border-radius: 22px;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .error-visual {
+        min-height: 180px;
+        padding: 18px;
+    }
+
+    .error-content {
+        padding: 10px 6px 8px;
+    }
+
+    .error-code {
+        font-size: clamp(42px, 18vw, 72px);
+    }
+
+    .error-copy,
+    .error-note {
+        font-size: 14px;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 720px) {
+    .error-card {
+        grid-template-columns: 1fr;
+    }
+
+    .error-visual {
+        min-height: 220px;
+    }
+
+    .error-content {
+        padding: 6px 6px 12px;
     }
 }

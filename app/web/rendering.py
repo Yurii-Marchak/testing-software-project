@@ -95,3 +95,24 @@ class PageRenderer:
 
 def page_renderer(services: ServiceContainer) -> PageRenderer:
     return PageRenderer(services)
+
+
+def render_error_page(
+    title: str,
+    code: str,
+    heading: str,
+    message: str,
+    accent: str,
+    eyebrow: str,
+    details: tuple[str, str],
+) -> str:
+    return render_template(
+        "error.html",
+        title=title,
+        error_code=code,
+        error_heading=heading,
+        error_message=message,
+        error_accent=accent,
+        error_eyebrow=eyebrow,
+        error_details=details,
+    )

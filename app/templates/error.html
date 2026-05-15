@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="error-page-body error-theme-{{ error_accent }}">
+    <main class="error-shell">
+        <section class="error-card">
+            <div class="error-visual" aria-hidden="true">
+                <div class="error-grid"></div>
+                <div class="error-glow error-glow-a"></div>
+                <div class="error-glow error-glow-b"></div>
+
+                {% if error_code == "404" %}
+                    <div class="error-chip">Route Missing</div>
+                    <svg class="error-illustration" viewBox="0 0 420 320" role="presentation">
+                        <defs>
+                            <linearGradient id="routeStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#22d3ee"></stop>
+                                <stop offset="100%" stop-color="#a78bfa"></stop>
+                            </linearGradient>
+                        </defs>
+                        <path d="M50 210 C 110 130, 180 120, 230 175 S 335 250, 372 168" class="route-line"></path>
+                        <circle cx="50" cy="210" r="12" class="route-node route-node-start"></circle>
+                        <circle cx="372" cy="168" r="12" class="route-node route-node-end"></circle>
+                        <circle cx="230" cy="175" r="18" class="route-node route-node-lost"></circle>
+                        <g transform="translate(188 118)">
+                            <circle cx="34" cy="34" r="28" class="route-radar"></circle>
+                            <circle cx="34" cy="34" r="14" class="route-radar-core"></circle>
+                            <path d="M58 58 L94 94" class="route-search"></path>
+                        </g>
+                        <rect x="24" y="34" width="112" height="54" rx="18" class="route-panel"></rect>
+                        <text x="46" y="67" class="error-svg-label">PC BUILD</text>
+                        <text x="46" y="208" class="error-svg-caption">start</text>
+                        <text x="340" y="146" class="error-svg-caption">target</text>
+                        <text x="207" y="230" class="error-svg-caption">lost path</text>
+                    </svg>
+                {% else %}
+                    <div class="error-chip">System Fault</div>
+                    <svg class="error-illustration" viewBox="0 0 420 320" role="presentation">
+                        <defs>
+                            <linearGradient id="serverStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fbbf24"></stop>
+                                <stop offset="100%" stop-color="#fb7185"></stop>
+                            </linearGradient>
+                        </defs>
+                        <g transform="translate(86 58)">
+                            <rect x="0" y="0" width="248" height="56" rx="18" class="server-block"></rect>
+                            <rect x="16" y="14" width="98" height="8" rx="4" class="server-line"></rect>
+                            <rect x="16" y="30" width="72" height="8" rx="4" class="server-line faint"></rect>
+                            <circle cx="210" cy="28" r="7" class="server-led warn"></circle>
+                            <circle cx="230" cy="28" r="7" class="server-led hot"></circle>
+                        </g>
+                        <g transform="translate(104 128)">
+                            <rect x="0" y="0" width="212" height="56" rx="18" class="server-block dim"></rect>
+                            <rect x="16" y="14" width="84" height="8" rx="4" class="server-line"></rect>
+                            <rect x="16" y="30" width="116" height="8" rx="4" class="server-line faint"></rect>
+                            <circle cx="174" cy="28" r="7" class="server-led warn"></circle>
+                            <circle cx="194" cy="28" r="7" class="server-led warn"></circle>
+                        </g>
+                        <g transform="translate(150 206)">
+                            <rect x="0" y="0" width="120" height="36" rx="16" class="server-core"></rect>
+                            <text x="24" y="23" class="error-svg-label alt">reboot</text>
+                        </g>
+                        <path d="M204 42 L190 86 L222 86 L206 128" class="spark-line"></path>
+                        <circle cx="208" cy="42" r="10" class="spark-core"></circle>
+                    </svg>
+                {% endif %}
+            </div>
+
+            <div class="error-content">
+                <div class="error-eyebrow">{{ error_eyebrow }}</div>
+                <div class="error-code">{{ error_code }}</div>
+                <h1 class="error-title">{{ error_heading }}</h1>
+                <p class="error-copy">{{ error_message }}</p>
+
+                <div class="error-detail-list">
+                    {% for item in error_details %}
+                        <div class="error-detail-item">
+                            <span class="error-detail-dot"></span>
+                            <span>{{ item }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if error_code == "404" %}
+                    <div class="error-note">
+                        Ми не бачимо потрібного маршруту в карті навігації. Найшвидше рішення — повернутися на головний екран і відкрити розділ заново.
+                    </div>
+                {% else %}
+                    <div class="error-note">
+                        Запит дійшов до сервера, але обробка зірвалася всередині системи. Якщо сторінка потрібна терміново, спробуйте повторити дію трохи пізніше.
+                    </div>
+                {% endif %}
+
+                <div class="error-actions">
+                    <a class="btn btn-primary" href="{{ url_for('home') }}">Повернутися на дашборд</a>
+                    <a class="btn btn-ghost" href="{{ url_for('orders') }}">Відкрити замовлення</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
