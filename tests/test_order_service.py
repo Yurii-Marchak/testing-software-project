@@ -78,8 +78,8 @@ def test_create_order_sets_due_amount_for_unpaid_request():
         client_id=1,
         pc_build_id=1,
         production_time=5,
-        payment_status="Не сплачено",
-        order_status="Не готово",
+        payment_status="unpaid",
+        order_status="not_ready",
     )
 
     receipt = service.create_order(request)
@@ -97,8 +97,8 @@ def test_create_order_rejects_invalid_payment_status():
         client_id=1,
         pc_build_id=1,
         production_time=5,
-        payment_status="Невідомо",
-        order_status="Не готово",
+        payment_status="unknown",
+        order_status="not_ready",
     )
 
     with pytest.raises(ApplicationError, match="статус оплати"):
@@ -111,8 +111,8 @@ def test_create_order_rejects_missing_client():
         client_id=99,
         pc_build_id=1,
         production_time=5,
-        payment_status="Сплачено",
-        order_status="Готово",
+        payment_status="paid",
+        order_status="ready",
     )
 
     with pytest.raises(ApplicationError, match="Клієнта не знайдено"):

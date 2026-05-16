@@ -41,7 +41,9 @@ class PcBuildRepository:
         with self.connection.cursor() as cursor:
             cursor.execute("SELECT total_price FROM PC_Build WHERE id = %s", (build_id,))
             result = cursor.fetchone()
-        return float(result[0]) if result else None
+        if not result or result[0] is None:
+            return None
+        return float(result[0])
 
     def get_component_summary(self, build_id: int) -> tuple | None:
         query = """

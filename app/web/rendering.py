@@ -21,6 +21,9 @@ class PageRenderer:
             "dashboard.html",
             stats=stats,
             recent_orders=orders[:8],
+            unpaid_status=self.services.order_service.UNPAID_STATUS,
+            payment_status_labels=self.services.order_service.PAYMENT_STATUS_LABELS,
+            order_status_labels=self.services.order_service.ORDER_STATUS_LABELS,
         )
 
     def render_clients(self, preset_phone: str = "") -> str:
@@ -59,6 +62,9 @@ class PageRenderer:
             orders=orders_list,
             payment_statuses=self.services.order_service.PAYMENT_STATUSES,
             order_statuses=self.services.order_service.ORDER_STATUSES,
+            payment_status_labels=self.services.order_service.PAYMENT_STATUS_LABELS,
+            order_status_labels=self.services.order_service.ORDER_STATUS_LABELS,
+            unpaid_status=self.services.order_service.UNPAID_STATUS,
             receipt=receipt,
             phone_query=phone_query,
             selected_client=selected_client,

@@ -63,15 +63,18 @@ class FakeReceipt:
 
 
 class FakeOrderService:
-    PAYMENT_STATUSES = ("Сплачено", "Не сплачено")
-    ORDER_STATUSES = ("Готово", "Не готово")
+    PAYMENT_STATUSES = ("paid", "unpaid")
+    ORDER_STATUSES = ("ready", "not_ready")
+    PAYMENT_STATUS_LABELS = {"paid": "Сплачено", "unpaid": "Не сплачено"}
+    ORDER_STATUS_LABELS = {"ready": "Готово", "not_ready": "Не готово"}
+    UNPAID_STATUS = "unpaid"
 
     def __init__(self):
         self.last_order_request = None
 
     def list_orders(self):
         return [
-            OrderSummary(1, "Іван Петренко", "Ігрова · RTX 4070", "2026-05-15", 5, "Сплачено", 0.0, "Готово"),
+            OrderSummary(1, "Іван Петренко", "Ігрова · RTX 4070", "2026-05-15", 5, "paid", 0.0, "ready"),
         ]
 
     def build_dashboard_stats(self, clients_count, builds_count):
@@ -173,8 +176,8 @@ def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
                 "client_id": "1",
                 "pc_build_id": "1",
                 "production_time": "5",
-                "payment_status": "Сплачено",
-                "order_status": "Готово",
+                "payment_status": "paid",
+                "order_status": "ready",
             },
         )
 
@@ -190,6 +193,28 @@ def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
     assert stored_receipt["total_price"] == 55000.0
     assert stored_client is not None
     assert stored_client["client_id"] == 1
+
+
+def test_orders_redirect_page_renders_receipt(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.post(
+            "/orders",
+            data={
+                "client_id": "1",
+                "pc_build_id": "1",
+                "production_time": "5",
+                "payment_status": "paid",
+                "order_status": "ready",
+            },
+            follow_redirects=True,
+        )
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Чек останньої операції" in page
+    assert "RTX 4070" in page
 
 
 def test_custom_404_page_is_returned(monkeypatch):

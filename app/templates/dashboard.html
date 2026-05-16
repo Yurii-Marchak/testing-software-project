@@ -68,17 +68,17 @@
                         <td data-label="Дата"><span class="mono-val">{{ order.order_date }}</span></td>
                         <td data-label="Дні">{{ order.production_time }}</td>
                         <td data-label="Оплата">
-                            {% if order.payment_status == "Сплачено" %}
-                                <span class="badge badge-paid">Сплачено</span>
+                            {% if order.payment_status == unpaid_status %}
+                                <span class="badge badge-unpaid">{{ payment_status_labels[order.payment_status] }}</span>
                             {% else %}
-                                <span class="badge badge-unpaid">Не сплачено</span>
+                                <span class="badge badge-paid">{{ payment_status_labels[order.payment_status] }}</span>
                             {% endif %}
                         </td>
                         <td data-label="Статус">
-                            {% if order.order_status == "Готово" %}
-                                <span class="badge badge-done">Готово</span>
+                            {% if order.order_status == "ready" %}
+                                <span class="badge badge-done">{{ order_status_labels[order.order_status] }}</span>
                             {% else %}
-                                <span class="badge badge-pending">Не готово</span>
+                                <span class="badge badge-pending">{{ order_status_labels[order.order_status] }}</span>
                             {% endif %}
                         </td>
                         <td data-label="Сума"><span class="price-val">{{ "%.2f"|format(order.due_amount) }} грн</span></td>

@@ -10,9 +10,17 @@ from app.repositories.pc_build_repository import PcBuildRepository
 
 class OrderService:
     COMPONENT_NAMES = ("GPU", "CPU", "Motherboard", "RAM", "PSU", "PC_Case")
-    PAYMENT_STATUSES = ("Сплачено", "Не сплачено")
-    ORDER_STATUSES = ("Готово", "Не готово")
-    UNPAID_STATUS = "Не сплачено"
+    PAYMENT_STATUSES = ("paid", "unpaid")
+    ORDER_STATUSES = ("ready", "not_ready")
+    PAYMENT_STATUS_LABELS = {
+        "paid": "Сплачено",
+        "unpaid": "Не сплачено",
+    }
+    ORDER_STATUS_LABELS = {
+        "ready": "Готово",
+        "not_ready": "Не готово",
+    }
+    UNPAID_STATUS = "unpaid"
 
     def __init__(
         self,

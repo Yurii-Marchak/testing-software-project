@@ -1,5 +1,15 @@
 import { findById, parseJsonScript } from "./utils.js";
 
+const paymentStatusLabels = {
+    paid: "Сплачено",
+    unpaid: "Не сплачено",
+};
+
+const orderStatusLabels = {
+    ready: "Готово",
+    not_ready: "Не готово",
+};
+
 export function initBuildPreview() {
     const catalog = parseJsonScript("build-catalog-json");
     const preview = document.getElementById("build-preview");
@@ -78,7 +88,7 @@ export function initOrderPreview() {
             return;
         }
 
-        const dueAmount = paymentStatus === "Не сплачено" ? Number(build.price || 0) : 0;
+        const dueAmount = paymentStatus === "unpaid" ? Number(build.price || 0) : 0;
         preview.innerHTML = `
             <div class="preview-title">Замовлення для ${client.full_name}</div>
             <div class="preview-list">
@@ -86,8 +96,8 @@ export function initOrderPreview() {
                 <div class="preview-row"><span>Збірка</span><span>${build.build_type} · ${build.gpu_name}</span></div>
                 <div class="preview-row"><span>Орієнтовна ціна</span><span>${Number(build.price || 0).toFixed(2)} грн</span></div>
                 <div class="preview-row"><span>Час зборки</span><span>${productionTime || "—"} дн.</span></div>
-                <div class="preview-row"><span>Статус оплати</span><span>${paymentStatus || "—"}</span></div>
-                <div class="preview-row"><span>Статус замовлення</span><span>${orderStatus || "—"}</span></div>
+                <div class="preview-row"><span>Статус оплати</span><span>${paymentStatusLabels[paymentStatus] || "—"}</span></div>
+                <div class="preview-row"><span>Статус замовлення</span><span>${orderStatusLabels[orderStatus] || "—"}</span></div>
                 <div class="preview-row total"><span>Сума до сплати</span><span>${dueAmount.toFixed(2)} грн</span></div>
             </div>
         `;

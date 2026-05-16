@@ -109,9 +109,9 @@ CREATE TABLE order_journal (
     pc_build_id INT NOT NULL,
     production_time INT NOT NULL,
     order_date DATE NOT NULL,
-    payment_status ENUM ('Сплачено', 'Не сплачено') NOT NULL,
+    payment_status ENUM ('paid', 'unpaid') NOT NULL,
     due_amount DECIMAL(10, 2) NOT NULL,
-    order_status ENUM ('Готово', 'Не готово') NOT NULL,
+    order_status ENUM ('ready', 'not_ready') NOT NULL,
     FOREIGN KEY (client_id) REFERENCES clients(id),
     FOREIGN KEY (pc_build_id) REFERENCES PC_Build(id)
 );
@@ -149,8 +149,8 @@ INSERT INTO PC_Build (gpu_id, cpu_id, motherboard_id, ram_id, psu_id, pc_case_id
 (2, 2, 1, 2, 1, 2, 'Ігрова');
 
 INSERT INTO order_journal (client_id, pc_build_id, production_time, order_date, payment_status, due_amount, order_status) VALUES
-(1, 1, 7, '2024-11-15', 'Сплачено', 0.00, 'Готово'),
-(2, 2, 10, '2024-11-12', 'Не сплачено', 1500.00, 'Не готово');
+(1, 1, 7, '2024-11-15', 'paid', 0.00, 'ready'),
+(2, 2, 10, '2024-11-12', 'unpaid', 1500.00, 'not_ready');
 
 DELIMITER $$
 CREATE TRIGGER trg_pc_build_insert

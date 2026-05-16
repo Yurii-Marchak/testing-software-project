@@ -94,17 +94,17 @@
                             <td data-label="Дата" data-sort-value="{{ order.order_date }}"><span class="mono-val">{{ order.order_date }}</span></td>
                             <td data-label="Дні" data-sort-value="{{ order.production_time }}">{{ order.production_time }}</td>
                             <td data-label="Оплата">
-                                {% if order.payment_status == "Сплачено" %}
-                                    <span class="badge badge-paid">Сплачено</span>
+                                {% if order.payment_status == unpaid_status %}
+                                    <span class="badge badge-unpaid">{{ payment_status_labels[order.payment_status] }}</span>
                                 {% else %}
-                                    <span class="badge badge-unpaid">Не сплачено</span>
+                                    <span class="badge badge-paid">{{ payment_status_labels[order.payment_status] }}</span>
                                 {% endif %}
                             </td>
                             <td data-label="Статус">
-                                {% if order.order_status == "Готово" %}
-                                    <span class="badge badge-done">Готово</span>
+                                {% if order.order_status == "ready" %}
+                                    <span class="badge badge-done">{{ order_status_labels[order.order_status] }}</span>
                                 {% else %}
-                                    <span class="badge badge-pending">Не готово</span>
+                                    <span class="badge badge-pending">{{ order_status_labels[order.order_status] }}</span>
                                 {% endif %}
                             </td>
                             <td data-label="Сума" data-sort-value="{{ order.due_amount }}"><span class="price-val">{{ "%.2f"|format(order.due_amount) }} грн</span></td>
@@ -136,8 +136,8 @@
                 {% endif %}
                 {% for component in receipt.components %}
                     <div class="receipt-row">
-                        <span>{{ component.name }}</span>
-                        <span>{{ component.values | join(", ") }}</span>
+                        <span>{{ component["name"] }}</span>
+                        <span>{{ component["values"] | join(", ") }}</span>
                     </div>
                 {% endfor %}
                 <div class="receipt-row total">
@@ -207,7 +207,7 @@
                     <select id="payment_status" name="payment_status" required data-order-control="payment_status">
                         <option value="">— Оберіть статус —</option>
                         {% for status in payment_statuses %}
-                            <option value="{{ status }}">{{ status }}</option>
+                            <option value="{{ status }}">{{ payment_status_labels[status] }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -218,7 +218,7 @@
                 <select id="order_status" name="order_status" required data-order-control="order_status">
                     <option value="">— Оберіть статус —</option>
                     {% for status in order_statuses %}
-                        <option value="{{ status }}">{{ status }}</option>
+                        <option value="{{ status }}">{{ order_status_labels[status] }}</option>
                     {% endfor %}
                 </select>
             </div>
