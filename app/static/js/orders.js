@@ -13,6 +13,13 @@ export function initClientModalFromUrl() {
     }
 }
 
+export function initBuildModalState() {
+    const meta = document.getElementById("builds-page-meta");
+    if (meta?.dataset.openBuildModal === "1") {
+        openModalById("build-modal");
+    }
+}
+
 export function initOrderModalState() {
     const meta = document.getElementById("orders-page-meta");
     if (!meta || meta.dataset.openOrderModal !== "1") return;
@@ -23,5 +30,12 @@ export function initOrderModalState() {
     if (clientSelect && meta.dataset.createdClientId) {
         clientSelect.value = meta.dataset.createdClientId;
         clientSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+}
+
+export function initComponentModalState() {
+    const meta = document.getElementById("components-page-meta");
+    if (meta?.dataset.openComponentModal === "1") {
+        openModalById("component-modal");
     }
 }

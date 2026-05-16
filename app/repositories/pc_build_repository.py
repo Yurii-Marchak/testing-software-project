@@ -27,6 +27,37 @@ class PcBuildRepository:
             cursor.execute(query, params)
         self.connection.commit()
 
+    def update(self, build_id: int, build_request: PcBuildRequest) -> None:
+        query = """
+            UPDATE PC_Build
+            SET gpu_id = %s,
+                cpu_id = %s,
+                motherboard_id = %s,
+                ram_id = %s,
+                psu_id = %s,
+                pc_case_id = %s,
+                build_type = %s
+            WHERE id = %s
+        """
+        params = (
+            build_request.gpu_id,
+            build_request.cpu_id,
+            build_request.motherboard_id,
+            build_request.ram_id,
+            build_request.psu_id,
+            build_request.pc_case_id,
+            build_request.build_type,
+            build_id,
+        )
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, params)
+        self.connection.commit()
+
+    def delete(self, build_id: int) -> None:
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM PC_Build WHERE id = %s", (build_id,))
+        self.connection.commit()
+
     def list_all(self) -> tuple[tuple, ...]:
         with self.connection.cursor() as cursor:
             cursor.execute("SELECT * FROM PC_Build")

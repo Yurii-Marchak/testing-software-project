@@ -12,8 +12,18 @@ class FakeConnection:
 
 
 class FakeClientService:
+    def __init__(self):
+        self.deleted_client_id = None
+        self.updated_client_id = None
+
     def register_client(self, registration):
         return 7
+
+    def update_client(self, client_id, registration):
+        self.updated_client_id = client_id
+
+    def delete_client(self, client_id):
+        self.deleted_client_id = client_id
 
     def list_clients(self):
         return [
@@ -22,6 +32,16 @@ class FakeClientService:
 
     def get_client(self, client_id):
         return ClientSummary(client_id, "Іван Петренко", "1990-01-01", "+380501234567", "ivan@example.com")
+
+    def get_client_form_values(self, client_id):
+        return {
+            "client_id": str(client_id),
+            "last_name": "Петренко",
+            "first_name": "Іван",
+            "birth_date": "1990-01-01",
+            "email": "ivan@example.com",
+            "phone": "+380501234567",
+        }
 
 
 class FakeComponentOption:
@@ -33,6 +53,8 @@ class FakeComponentOption:
 class FakePcBuildService:
     def __init__(self):
         self.created_builds = []
+        self.updated_build_id = None
+        self.deleted_build_id = None
 
     def list_builds(self):
         return [
@@ -56,6 +78,24 @@ class FakePcBuildService:
     def create_build(self, build_request):
         self.created_builds.append(build_request)
 
+    def update_build(self, build_id, build_request):
+        self.updated_build_id = build_id
+
+    def delete_build(self, build_id):
+        self.deleted_build_id = build_id
+
+    def get_build_form_values(self, build_id):
+        return {
+            "build_id": str(build_id),
+            "gpu_id": "1",
+            "cpu_id": "1",
+            "motherboard_id": "1",
+            "ram_id": "1",
+            "psu_id": "1",
+            "pc_case_id": "1",
+            "build_type": "Ігрова",
+        }
+
 
 class FakeReceipt:
     order_date = "2026-05-15"
@@ -73,6 +113,8 @@ class FakeOrderService:
 
     def __init__(self):
         self.last_order_request = None
+        self.updated_order_id = None
+        self.deleted_order_id = None
 
     def list_orders(self):
         return [
@@ -86,11 +128,87 @@ class FakeOrderService:
         self.last_order_request = order_request
         return FakeReceipt()
 
+    def update_order(self, order_id, order_request):
+        self.updated_order_id = order_id
+
+    def delete_order(self, order_id):
+        self.deleted_order_id = order_id
+
+    def get_order_form_values(self, order_id):
+        return {
+            "order_id": str(order_id),
+            "client_id": "1",
+            "pc_build_id": "1",
+            "production_time": "5",
+            "payment_status": "paid",
+            "order_status": "ready",
+        }
+
+
+class FakeComponentService:
+    def __init__(self):
+        self.updated_component = None
+        self.deleted_component = None
+
+    def list_sections(self):
+        return [
+            {
+                "table_name": "GPU",
+                "slug": "gpu",
+                "short_label": "GPU",
+                "title": "Відеокарти",
+                "description": "Тестова секція",
+                "headers": ["Модель", "Виробник", "Чіп", "Пам'ять", "Тип", "Вентилятори", "TDP", "Рек. PSU", "Ціна"],
+                "rows": ((1, "RTX 4070", "MSI", "RTX 4070", 12288, "GDDR6X", 3, 215, 750, 55000.0),),
+            }
+        ]
+
+    def get_config(self, table_name):
+        return {
+            "title": "Відеокарти",
+            "fields": [
+                ("model_name", "Модель", "text"),
+                ("manufacturer", "Виробник", "text"),
+                ("gpu_name", "Чіп", "text"),
+                ("video_memory", "Пам'ять (МБ)", "number"),
+                ("memory_type", "Тип пам'яті", "text"),
+                ("fan_count", "Вентилятори", "number"),
+                ("power_consumption", "TDP", "number"),
+                ("recommended_psu_power", "Рекомендована потужність PSU", "number"),
+                ("price", "Ціна", "number"),
+            ],
+        }
+
+    def get_component_form_data(self, table_name, component_id):
+        return {
+            "table_name": table_name,
+            "component_id": str(component_id),
+            "model_name": "RTX 4070",
+            "manufacturer": "MSI",
+            "gpu_name": "RTX 4070",
+            "video_memory": "12288",
+            "memory_type": "GDDR6X",
+            "fan_count": "3",
+            "power_consumption": "215",
+            "recommended_psu_power": "750",
+            "price": "55000",
+        }
+
+    def create_component(self, table_name, values):
+        return None
+
+    def update_component(self, table_name, component_id, values):
+        self.updated_component = (table_name, component_id)
+
+    def delete_component(self, table_name, component_id):
+        self.deleted_component = (table_name, component_id)
+
 
 def build_test_app(monkeypatch):
     import app.web.runtime as runtime
 
     fake_client_service = FakeClientService()
+    fake_component_service = FakeComponentService()
     fake_pc_build_service = FakePcBuildService()
     fake_order_service = FakeOrderService()
 
@@ -100,6 +218,7 @@ def build_test_app(monkeypatch):
         "build_services",
         lambda connection: ServiceContainer(
             client_service=fake_client_service,
+            component_service=fake_component_service,
             pc_build_service=fake_pc_build_service,
             order_service=fake_order_service,
         ),
@@ -107,7 +226,7 @@ def build_test_app(monkeypatch):
 
     app = create_web_app(DatabaseConfig("localhost", "root", "secret", "lab7"))
     app.config["TESTING"] = True
-    return app, fake_pc_build_service, fake_order_service
+    return app, fake_client_service, fake_component_service, fake_pc_build_service, fake_order_service
 
 
 def future_deadline(days: int = 5) -> str:
@@ -119,7 +238,7 @@ def past_deadline(days: int = 1) -> str:
 
 
 def test_home_page_returns_200(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.get("/")
@@ -128,7 +247,7 @@ def test_home_page_returns_200(monkeypatch):
 
 
 def test_clients_page_shows_split_name_columns(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.get("/clients")
@@ -140,7 +259,7 @@ def test_clients_page_shows_split_name_columns(monkeypatch):
 
 
 def test_clients_post_redirects_after_success(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -159,7 +278,7 @@ def test_clients_post_redirects_after_success(monkeypatch):
 
 
 def test_clients_post_renders_inline_error_and_keeps_modal_open(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -180,8 +299,32 @@ def test_clients_post_renders_inline_error_and_keeps_modal_open(monkeypatch):
     assert 'value="Іван"' in page
 
 
+def test_client_update_and_delete_routes(monkeypatch):
+    app, fake_client_service, *_ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        update_response = client.post(
+            "/clients",
+            data={
+                "action": "update",
+                "client_id": "1",
+                "last_name": "Петренко",
+                "first_name": "Іван",
+                "birth_date": "1990-01-01",
+                "email": "ivan@example.com",
+                "phone": "+380501234567",
+            },
+        )
+        delete_response = client.post("/clients", data={"action": "delete", "client_id": "1"})
+
+    assert update_response.status_code == 302
+    assert delete_response.status_code == 302
+    assert fake_client_service.updated_client_id == 1
+    assert fake_client_service.deleted_client_id == 1
+
+
 def test_orders_page_returns_200(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.get("/orders")
@@ -190,7 +333,7 @@ def test_orders_page_returns_200(monkeypatch):
 
 
 def test_builds_post_redirects_after_success(monkeypatch):
-    app, fake_pc_build_service, _ = build_test_app(monkeypatch)
+    app, _, _, fake_pc_build_service, _ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -211,8 +354,34 @@ def test_builds_post_redirects_after_success(monkeypatch):
     assert len(fake_pc_build_service.created_builds) == 1
 
 
+def test_build_update_and_delete_routes(monkeypatch):
+    app, _, _, fake_pc_build_service, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        update_response = client.post(
+            "/builds",
+            data={
+                "action": "update",
+                "build_id": "1",
+                "gpu_id": "1",
+                "cpu_id": "1",
+                "motherboard_id": "1",
+                "ram_id": "1",
+                "psu_id": "1",
+                "pc_case_id": "1",
+                "build_type": "Ігрова",
+            },
+        )
+        delete_response = client.post("/builds", data={"action": "delete", "build_id": "1"})
+
+    assert update_response.status_code == 302
+    assert delete_response.status_code == 302
+    assert fake_pc_build_service.updated_build_id == 1
+    assert fake_pc_build_service.deleted_build_id == 1
+
+
 def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
-    app, _, fake_order_service = build_test_app(monkeypatch)
+    app, _, _, _, fake_order_service = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -241,7 +410,7 @@ def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
 
 
 def test_orders_redirect_page_renders_receipt(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -263,7 +432,7 @@ def test_orders_redirect_page_renders_receipt(monkeypatch):
 
 
 def test_orders_post_rejects_past_deadline_without_500(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.post(
@@ -280,13 +449,79 @@ def test_orders_post_rejects_past_deadline_without_500(monkeypatch):
 
     assert response.status_code == 200
     page = response.get_data(as_text=True)
-    assert "Дата завершення зборки має бути пізнішою за поточний момент." in page
+    assert "Дата завершення збірки має бути пізнішою за поточний момент." in page
     assert 'data-open-order-modal="1"' in page
     assert 'value="paid"' in page
 
 
+def test_order_update_and_delete_routes(monkeypatch):
+    app, _, _, _, fake_order_service = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        update_response = client.post(
+            "/orders",
+            data={
+                "action": "update",
+                "order_id": "1",
+                "client_id": "1",
+                "pc_build_id": "1",
+                "production_deadline": future_deadline(),
+                "payment_status": "paid",
+                "order_status": "ready",
+            },
+        )
+        delete_response = client.post("/orders", data={"action": "delete", "order_id": "1"})
+
+    assert update_response.status_code == 302
+    assert delete_response.status_code == 302
+    assert fake_order_service.updated_order_id == 1
+    assert fake_order_service.deleted_order_id == 1
+
+
+def test_components_page_returns_200(monkeypatch):
+    app, *_ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.get("/components?table=GPU")
+
+    assert response.status_code == 200
+    assert "Відеокарти" in response.get_data(as_text=True)
+
+
+def test_component_update_and_delete_routes(monkeypatch):
+    app, _, fake_component_service, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        update_response = client.post(
+            "/components",
+            data={
+                "action": "update",
+                "table_name": "GPU",
+                "component_id": "1",
+                "model_name": "RTX 4070",
+                "manufacturer": "MSI",
+                "gpu_name": "RTX 4070",
+                "video_memory": "12288",
+                "memory_type": "GDDR6X",
+                "fan_count": "3",
+                "power_consumption": "215",
+                "recommended_psu_power": "750",
+                "price": "55000",
+            },
+        )
+        delete_response = client.post(
+            "/components",
+            data={"action": "delete", "table_name": "GPU", "component_id": "1"},
+        )
+
+    assert update_response.status_code == 302
+    assert delete_response.status_code == 302
+    assert fake_component_service.updated_component == ("GPU", 1)
+    assert fake_component_service.deleted_component == ("GPU", 1)
+
+
 def test_custom_404_page_is_returned(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
 
     with app.test_client() as client:
         response = client.get("/missing-page")
@@ -296,7 +531,7 @@ def test_custom_404_page_is_returned(monkeypatch):
 
 
 def test_custom_500_page_is_returned(monkeypatch):
-    app, _, _ = build_test_app(monkeypatch)
+    app, *_ = build_test_app(monkeypatch)
     app.config["PROPAGATE_EXCEPTIONS"] = False
 
     @app.get("/boom-for-test")

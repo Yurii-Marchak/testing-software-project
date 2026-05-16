@@ -37,6 +37,54 @@ class OrderRepository:
             cursor.execute(query, params)
         self.connection.commit()
 
+    def get_by_id(self, order_id: int) -> tuple | None:
+        query = """
+            SELECT id, client_id, pc_build_id, production_time, order_date, payment_status, due_amount, order_status
+            FROM order_journal
+            WHERE id = %s
+        """
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, (order_id,))
+            return cursor.fetchone()
+
+    def update(
+        self,
+        order_id: int,
+        client_id: int,
+        pc_build_id: int,
+        production_time: int,
+        payment_status: str,
+        due_amount: float,
+        order_status: str,
+    ) -> None:
+        query = """
+            UPDATE order_journal
+            SET client_id = %s,
+                pc_build_id = %s,
+                production_time = %s,
+                payment_status = %s,
+                due_amount = %s,
+                order_status = %s
+            WHERE id = %s
+        """
+        params = (
+            client_id,
+            pc_build_id,
+            production_time,
+            payment_status,
+            due_amount,
+            order_status,
+            order_id,
+        )
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, params)
+        self.connection.commit()
+
+    def delete(self, order_id: int) -> None:
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM order_journal WHERE id = %s", (order_id,))
+        self.connection.commit()
+
     def list_all(self) -> tuple[tuple, ...]:
         query = """
             SELECT id, client_id, pc_build_id, production_time, order_date, payment_status, due_amount, order_status

@@ -1100,6 +1100,16 @@ tbody tr:hover td {
     font-size: 12px;
 }
 
+.table-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.inline-form {
+    margin: 0;
+}
+
 .split-grid {
     display: grid;
     grid-template-columns: 1.65fr 1fr;

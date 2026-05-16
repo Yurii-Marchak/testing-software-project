@@ -4,60 +4,74 @@
 {% block page_title %}Комплектуючі{% endblock %}
 {% block page_pill %}CATALOG{% endblock %}
 
-{% block content %}
-{% set component_sections = [
-    ("gpu", "GPU", "Відеокарти", "Оберіть продуктивну графіку для ігрових і робочих збірок.", gpu_rows, ["Модель", "Виробник", "Чіп", "Пам'ять", "Тип", "Вентилятори", "TDP", "Ціна"]),
-    ("cpu", "CPU", "Процесори", "Порівнюйте ядра, потоки та сумісність з пам'яттю.", cpu_rows, ["Модель", "Виробник", "TDP", "Ядра", "Потоки", "Техпроцес", "Base", "Turbo", "RAM", "Ціна"]),
-    ("motherboard", "MB", "Материнські плати", "Контролюйте сокет, чипсет і форм-фактор без ручного зіставлення.", motherboard_rows, ["Модель", "Виробник", "Сокет", "Чипсет", "RAM слоти", "Макс. частота", "Форм-фактор", "RAM", "Ціна"]),
-    ("ram", "RAM", "Оперативна пам'ять", "Зручно оцінюйте тип, обсяг і частоту для майбутньої збірки.", ram_rows, ["Модель", "Виробник", "Обсяг", "Частота", "Тип", "Комплект", "Ціна"]),
-    ("psu", "PSU", "Блоки живлення", "Перевіряйте потужність і сертифікацію ще до створення збірки.", psu_rows, ["Модель", "Виробник", "Потужність", "Сертифікат", "Форм-фактор", "Модульність", "Ціна"]),
-    ("cases", "CASE", "Корпуси", "Форма, охолодження й сумісність корпусу з усією конфігурацією.", case_rows, ["Модель", "Виробник", "Форм-фактор", "Скло", "Вентилятори", "Ціна"])
-] %}
+{% block topbar_actions %}
+    {% if selected_component_table %}
+        <button class="btn btn-primary" type="button" data-open-modal="component-modal">+ Нова {{ selected_component_config.title[:-1] if selected_component_config else 'комплектуюча' }}</button>
+    {% endif %}
+{% endblock %}
 
+{% block content %}
 <section class="card section-gap">
     <div class="card-head">
         <span class="card-icon">#</span>
         <div class="card-title">Швидкі переходи</div>
     </div>
     <div class="inner-pad quick-links">
-        {% for anchor, short_label, title, description, rows, headers in component_sections %}
-            <a class="quick-link-chip" href="#section-{{ anchor }}">
-                <span class="quick-link-label">{{ short_label }}</span>
-                <span class="quick-link-text">{{ title }}</span>
+        {% for section in component_sections %}
+            <a class="quick-link-chip" href="{{ url_for('components', table=section.table_name) }}#section-{{ section.slug }}">
+                <span class="quick-link-label">{{ section.short_label }}</span>
+                <span class="quick-link-text">{{ section.title }}</span>
             </a>
         {% endfor %}
     </div>
 </section>
 
-{% for anchor, short_label, title, description, rows, headers in component_sections %}
-    <section class="card section-gap" id="section-{{ anchor }}">
+{% for section in component_sections %}
+    <section class="card section-gap" id="section-{{ section.slug }}">
         <div class="card-head">
-            <span class="card-icon">{{ short_label }}</span>
-            <div class="card-title">{{ title }}</div>
-            <div class="section-note">{{ description }}</div>
+            <span class="card-icon">{{ section.short_label }}</span>
+            <div class="card-title">{{ section.title }}</div>
+            <div class="section-note">{{ section.description }}</div>
+            <div class="toolbar">
+                <a class="btn btn-primary btn-sm" href="{{ url_for('components', table=section.table_name) }}">+ Додати</a>
+            </div>
         </div>
         <div class="table-wrap">
             <table class="sortable-table" data-page-size="5">
                 <thead>
                     <tr>
-                        {% for header in headers %}
-                            <th data-sort="{{ 'number' if header in ['TDP', 'Ядра', 'Потоки', 'Техпроцес', 'Base', 'Turbo', 'Обсяг', 'Частота', 'Комплект', 'Потужність', 'Вентилятори', 'Ціна', 'RAM слоти', 'Макс. частота'] else 'text' }}">{{ header }}</th>
+                        <th data-sort="number">#</th>
+                        {% for header in section.headers %}
+                            <th>{{ header }}</th>
                         {% endfor %}
+                        <th>Дії</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in rows %}
+                    {% for row in section.rows %}
                         <tr>
+                            <td data-label="#" data-sort-value="{{ row[0] }}"><span class="id-badge">#{{ row[0] }}</span></td>
                             {% for value in row[1:] %}
-                                <td data-label="{{ headers[loop.index0] }}">{{ value }}</td>
+                                <td data-label="{{ section.headers[loop.index0] }}">{{ value }}</td>
                             {% endfor %}
+                            <td data-label="Дії">
+                                <div class="table-actions">
+                                    <a class="btn btn-ghost btn-sm" href="{{ url_for('components', table=section.table_name, edit_component_id=row[0]) }}">Редагувати</a>
+                                    <form method="post" class="inline-form">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="table_name" value="{{ section.table_name }}">
+                                        <input type="hidden" name="component_id" value="{{ row[0] }}">
+                                        <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="{{ headers|length }}">
+                            <td colspan="{{ section.headers|length + 2 }}">
                                 <div class="empty-state">
-                                    <div class="empty-icon">{{ short_label }}</div>
-                                    <p>Для секції “{{ title }}” поки немає записів.</p>
+                                    <div class="empty-icon">{{ section.short_label }}</div>
+                                    <p>Для секції “{{ section.title }}” поки немає записів.</p>
                                 </div>
                             </td>
                         </tr>
@@ -67,4 +81,68 @@
         </div>
     </section>
 {% endfor %}
+
+<div
+    id="components-page-meta"
+    data-open-component-modal="{{ '1' if open_component_modal else '0' }}"
+></div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="component-modal" aria-hidden="true">
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="component-modal-title">
+        <div class="modal-header">
+            <div>
+                <div class="modal-eyebrow">Комплектуючі</div>
+                <h2 class="modal-title" id="component-modal-title">
+                    {% if component_form_values.get('component_id') %}Редагування{% else %}Нова{% endif %}
+                    {% if selected_component_config %} {{ selected_component_config.title[:-1] if selected_component_config.title.endswith('и') else selected_component_config.title }}{% else %} комплектуюча{% endif %}
+                </h2>
+            </div>
+            <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
+        </div>
+        {% if selected_component_config %}
+            <form method="post" class="modal-body form-grid cols1">
+                <input type="hidden" name="action" value="{{ 'update' if component_form_values.get('component_id') else 'create' }}">
+                <input type="hidden" name="component_id" value="{{ component_form_values.get('component_id', '') }}">
+                <input type="hidden" name="table_name" value="{{ selected_component_table }}">
+                {% if component_form_error %}
+                    <div class="alert alert-warn full" role="alert">{{ component_form_error }}</div>
+                {% endif %}
+                <div class="form-grid">
+                    {% for field_name, label, field_type in selected_component_config.fields %}
+                        <div class="form-group {% if loop.last and loop.index is odd %}full{% endif %}">
+                            <label for="{{ field_name }}">{{ label }}</label>
+                            {% if field_type == 'boolean' %}
+                                <select id="{{ field_name }}" name="{{ field_name }}" required>
+                                    <option value="">— Оберіть значення —</option>
+                                    <option value="true" {% if component_form_values.get(field_name) == 'true' %}selected{% endif %}>Так</option>
+                                    <option value="false" {% if component_form_values.get(field_name) == 'false' %}selected{% endif %}>Ні</option>
+                                </select>
+                            {% else %}
+                                <input id="{{ field_name }}" name="{{ field_name }}" type="{{ 'number' if field_type == 'number' else 'text' }}" step="any" value="{{ component_form_values.get(field_name, '') }}" required>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
+                    <button class="btn btn-primary" type="submit">
+                        {% if component_form_values.get('component_id') %}Зберегти зміни{% else %}Створити запис{% endif %}
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="modal-body">
+                <div class="alert alert-info">Оберіть тип комплектуючого через швидкі переходи або кнопку “Додати” у потрібній секції.</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block mobile_fab %}
+{% if selected_component_table %}
+    <button class="mobile-fab" type="button" data-open-modal="component-modal" aria-label="Додати комплектуючу">+</button>
+{% endif %}
 {% endblock %}

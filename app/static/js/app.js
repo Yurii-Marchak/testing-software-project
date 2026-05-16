@@ -1,5 +1,5 @@
 import { initModals } from "./modals.js";
-import { initClientModalFromUrl, initOrderModalState } from "./orders.js";
+import { initBuildModalState, initClientModalFromUrl, initComponentModalState, initOrderModalState } from "./orders.js";
 import { initBuildPreview, initOrderPreview } from "./previews.js";
 import { initShellLoading, initSidebar } from "./shell.js";
 import { initPhoneAutoSearch, initSortableTables, initTableFilters, initTablePagination } from "./tables.js";
@@ -17,5 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initBuildPreview();
     initOrderPreview();
     initClientModalFromUrl();
+    initBuildModalState();
     initOrderModalState();
+    initComponentModalState();
 });

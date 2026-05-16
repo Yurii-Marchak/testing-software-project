@@ -5,6 +5,7 @@ from typing import Any
 
 from flask import render_template
 
+from app.exceptions import ApplicationError
 from app.web.dependencies import ServiceContainer
 from app.web.serializers import build_catalog_json, build_component_options, serialize_clients
 
@@ -46,11 +47,22 @@ class PageRenderer:
         )
 
     def render_builds(self) -> str:
+        return self.render_builds_with_state()
+
+    def render_builds_with_state(
+        self,
+        build_form_error: str = "",
+        build_form_values: dict[str, str] | None = None,
+        open_build_modal: bool = False,
+    ) -> str:
         return self._render(
             "builds.html",
             component_options=build_component_options(self.services),
             builds=self.services.pc_build_service.list_builds(),
             build_catalog_json=build_catalog_json(self.services),
+            build_form_error=build_form_error,
+            build_form_values=build_form_values or {},
+            open_build_modal=open_build_modal,
         )
 
     def render_orders(
@@ -102,14 +114,33 @@ class PageRenderer:
         )
 
     def render_components(self) -> str:
+        return self.render_components_with_state()
+
+    def render_components_with_state(
+        self,
+        component_form_error: str = "",
+        component_form_values: dict[str, str] | None = None,
+        selected_component_table: str = "",
+        open_component_modal: bool = False,
+    ) -> str:
+        try:
+            selected_component_config = (
+                self.services.component_service.get_config(selected_component_table)
+                if selected_component_table
+                else None
+            )
+        except ApplicationError:
+            selected_component_config = None
+            selected_component_table = ""
+            open_component_modal = False
         return self._render(
             "components.html",
-            gpu_rows=self.services.pc_build_service.list_components("GPU"),
-            cpu_rows=self.services.pc_build_service.list_components("CPU"),
-            motherboard_rows=self.services.pc_build_service.list_components("Motherboard"),
-            ram_rows=self.services.pc_build_service.list_components("RAM"),
-            psu_rows=self.services.pc_build_service.list_components("PSU"),
-            case_rows=self.services.pc_build_service.list_components("PC_Case"),
+            component_sections=self.services.component_service.list_sections(),
+            component_form_error=component_form_error,
+            component_form_values=component_form_values or {},
+            selected_component_table=selected_component_table,
+            selected_component_config=selected_component_config,
+            open_component_modal=open_component_modal,
         )
 
     def _render(self, template_name: str, **context: Any) -> str:

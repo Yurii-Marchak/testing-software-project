@@ -7,6 +7,7 @@ from app.repositories.component_repository import ComponentRepository
 from app.repositories.order_repository import OrderRepository
 from app.repositories.pc_build_repository import PcBuildRepository
 from app.services.client_service import ClientService
+from app.services.component_service import ComponentService
 from app.services.order_service import OrderService
 from app.services.pc_build_service import PcBuildService
 
@@ -14,6 +15,7 @@ from app.services.pc_build_service import PcBuildService
 @dataclass
 class ServiceContainer:
     client_service: ClientService
+    component_service: ComponentService
     pc_build_service: PcBuildService
     order_service: OrderService
 
@@ -26,6 +28,7 @@ def build_services(connection: Connection) -> ServiceContainer:
 
     return ServiceContainer(
         client_service=ClientService(client_repository),
+        component_service=ComponentService(component_repository),
         pc_build_service=PcBuildService(component_repository, pc_build_repository),
         order_service=OrderService(
             client_repository,

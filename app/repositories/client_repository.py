@@ -22,6 +22,21 @@ class ClientRepository:
             cursor.execute(query, (client_id,))
             return cursor.fetchone()
 
+    def update(self, client_id: int, full_name: str, birth_date: str, email: str, phone: str) -> None:
+        query = """
+            UPDATE clients
+            SET full_name = %s, birth_date = %s, email = %s, phone = %s
+            WHERE id = %s
+        """
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, (full_name, birth_date, email, phone, client_id))
+        self.connection.commit()
+
+    def delete(self, client_id: int) -> None:
+        with self.connection.cursor() as cursor:
+            cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
+        self.connection.commit()
+
     def list_all(self) -> tuple[tuple, ...]:
         query = "SELECT id, full_name, birth_date, email, phone FROM clients ORDER BY full_name"
         with self.connection.cursor() as cursor:

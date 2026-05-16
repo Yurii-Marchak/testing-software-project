@@ -29,6 +29,7 @@
                     <th data-sort="text">Дата народження</th>
                     <th data-sort="text">Email</th>
                     <th data-sort="text">Телефон</th>
+                    <th>Дії</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,10 +42,20 @@
                         <td data-label="Дата народження" data-sort-value="{{ client.birth_date }}"><span class="mono-val">{{ client.birth_date }}</span></td>
                         <td data-label="Email">{{ client.email }}</td>
                         <td data-label="Телефон"><span class="mono-val">{{ client.phone }}</span></td>
+                        <td data-label="Дії">
+                            <div class="table-actions">
+                                <a class="btn btn-ghost btn-sm" href="{{ url_for('clients', edit_client_id=client.client_id) }}">Редагувати</a>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="client_id" value="{{ client.client_id }}">
+                                    <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="empty-state">
                                 <div class="empty-icon">👤</div>
                                 <p>Клієнтів ще немає. Почніть із кнопки “Новий клієнт”.</p>
@@ -67,11 +78,15 @@
         <div class="modal-header">
             <div>
                 <div class="modal-eyebrow">Клієнти</div>
-                <h2 class="modal-title" id="client-modal-title">Реєстрація клієнта</h2>
+                <h2 class="modal-title" id="client-modal-title">
+                    {% if client_form_values.get('client_id') %}Редагування клієнта{% else %}Реєстрація клієнта{% endif %}
+                </h2>
             </div>
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body form-grid cols1">
+            <input type="hidden" name="action" value="{{ 'update' if client_form_values.get('client_id') else 'create' }}">
+            <input type="hidden" name="client_id" value="{{ client_form_values.get('client_id', '') }}">
             {% if client_form_error %}
                 <div class="alert alert-warn full" role="alert">{{ client_form_error }}</div>
             {% endif %}
@@ -99,7 +114,9 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
-                <button class="btn btn-primary" type="submit">Зареєструвати клієнта</button>
+                <button class="btn btn-primary" type="submit">
+                    {% if client_form_values.get('client_id') %}Зберегти зміни{% else %}Зареєструвати клієнта{% endif %}
+                </button>
             </div>
         </form>
     </div>

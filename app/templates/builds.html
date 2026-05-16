@@ -32,6 +32,7 @@
                     <th data-sort="text">PSU</th>
                     <th data-sort="text">Корпус</th>
                     <th data-sort="number">Ціна</th>
+                    <th>Дії</th>
                 </tr>
             </thead>
             <tbody>
@@ -46,10 +47,20 @@
                         <td data-label="PSU">{{ build.psu_name }}</td>
                         <td data-label="Корпус">{{ build.pc_case_name }}</td>
                         <td data-label="Ціна" data-sort-value="{{ build.total_price }}"><span class="price-val">{{ "%.2f"|format(build.total_price) }} грн</span></td>
+                        <td data-label="Дії">
+                            <div class="table-actions">
+                                <a class="btn btn-ghost btn-sm" href="{{ url_for('builds', edit_build_id=build.build_id) }}">Редагувати</a>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="build_id" value="{{ build.build_id }}">
+                                    <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="9">
+                        <td colspan="10">
                             <div class="empty-state">
                                 <div class="empty-icon">⚙️</div>
                                 <p>Збірок ще немає. Створіть першу конфігурацію через кнопку “Нова збірка”.</p>
@@ -63,6 +74,7 @@
 </section>
 
 <script id="build-catalog-json" type="application/json">{{ build_catalog_json|tojson }}</script>
+<div id="builds-page-meta" data-open-build-modal="{{ '1' if open_build_modal else '0' }}"></div>
 {% endblock %}
 
 {% block modals %}
@@ -71,11 +83,18 @@
         <div class="modal-header">
             <div>
                 <div class="modal-eyebrow">Збірки</div>
-                <h2 class="modal-title" id="build-modal-title">Нова збірка ПК</h2>
+                <h2 class="modal-title" id="build-modal-title">
+                    {% if build_form_values.get('build_id') %}Редагування збірки ПК{% else %}Нова збірка ПК{% endif %}
+                </h2>
             </div>
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body">
+            <input type="hidden" name="action" value="{{ 'update' if build_form_values.get('build_id') else 'create' }}">
+            <input type="hidden" name="build_id" value="{{ build_form_values.get('build_id', '') }}">
+            {% if build_form_error %}
+                <div class="alert alert-warn" role="alert">{{ build_form_error }}</div>
+            {% endif %}
             <div class="comp-select-grid">
                 {% for field_name, label, table_key in [
                     ("gpu_id", "GPU", "GPU"),
@@ -90,7 +109,7 @@
                         <select id="{{ field_name }}" name="{{ field_name }}" required data-build-control="{{ field_name }}">
                             <option value="">— Оберіть {{ label.lower() }} —</option>
                             {% for option in component_options[table_key] %}
-                                <option value="{{ option.component_id }}">{{ option.label }}</option>
+                                <option value="{{ option.component_id }}" {% if build_form_values.get(field_name) == option.component_id|string %}selected{% endif %}>{{ option.label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -99,7 +118,7 @@
             <div class="form-grid">
                 <div class="form-group full">
                     <label for="build_type">Тип збірки</label>
-                    <input id="build_type" name="build_type" type="text" placeholder="Наприклад: Ігрова" required data-build-control="build_type">
+                    <input id="build_type" name="build_type" type="text" placeholder="Наприклад: Ігрова" value="{{ build_form_values.get('build_type', '') }}" required data-build-control="build_type">
                 </div>
             </div>
 
@@ -110,7 +129,9 @@
 
             <div class="modal-footer">
                 <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
-                <button class="btn btn-primary" type="submit">Створити збірку</button>
+                <button class="btn btn-primary" type="submit">
+                    {% if build_form_values.get('build_id') %}Зберегти зміни{% else %}Створити збірку{% endif %}
+                </button>
             </div>
         </form>
     </div>

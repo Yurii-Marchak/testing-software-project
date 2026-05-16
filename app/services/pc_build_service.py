@@ -31,9 +31,35 @@ class PcBuildService:
     def list_builds(self) -> list[BuildSummary]:
         return [self._to_build_summary(row) for row in self.pc_build_repository.list_all()]
 
+    def get_build_form_values(self, build_id: int) -> dict[str, str] | None:
+        row = self.pc_build_repository.get_by_id(build_id)
+        if row is None:
+            return None
+        return {
+            "build_id": str(row[0]),
+            "gpu_id": str(row[1]),
+            "cpu_id": str(row[2]),
+            "motherboard_id": str(row[3]),
+            "ram_id": str(row[4]),
+            "psu_id": str(row[5]),
+            "pc_case_id": str(row[6]),
+            "build_type": str(row[8]),
+        }
+
     def create_build(self, build_request: PcBuildRequest) -> None:
         self._validate_build_request(build_request)
         self.pc_build_repository.create(build_request)
+
+    def update_build(self, build_id: int, build_request: PcBuildRequest) -> None:
+        if self.pc_build_repository.get_by_id(build_id) is None:
+            raise ApplicationError("Збірку ПК не знайдено.")
+        self._validate_build_request(build_request)
+        self.pc_build_repository.update(build_id, build_request)
+
+    def delete_build(self, build_id: int) -> None:
+        if self.pc_build_repository.get_by_id(build_id) is None:
+            raise ApplicationError("Збірку ПК не знайдено.")
+        self.pc_build_repository.delete(build_id)
 
     def _to_build_summary(self, row: tuple) -> BuildSummary:
         component_names = {

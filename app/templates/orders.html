@@ -50,7 +50,7 @@
                             <td colspan="4">
                                 <div class="empty-state">
                                     <div class="empty-icon">📞</div>
-                                    <p>За поточним фільтром клієнтів не знайдено</p>
+                                    <p>За поточним фільтром клієнтів не знайдено.</p>
                                 </div>
                             </td>
                         </tr>
@@ -83,6 +83,7 @@
                         <th data-sort="text">Оплата</th>
                         <th data-sort="text">Статус</th>
                         <th data-sort="number">Сума</th>
+                        <th>Дії</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,10 +109,20 @@
                                 {% endif %}
                             </td>
                             <td data-label="Сума" data-sort-value="{{ order.due_amount }}"><span class="price-val">{{ "%.2f"|format(order.due_amount) }} грн</span></td>
+                            <td data-label="Дії">
+                                <div class="table-actions">
+                                    <a class="btn btn-ghost btn-sm" href="{{ url_for('orders', edit_order_id=order.order_id, open_order_modal='1') }}">Редагувати</a>
+                                    <form method="post" class="inline-form">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="order_id" value="{{ order.order_id }}">
+                                        <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="empty-state">
                                     <div class="empty-icon">📋</div>
                                     <p>Замовлень ще немає. Створіть перше замовлення через модальне вікно.</p>
@@ -169,12 +180,15 @@
         <div class="modal-header">
             <div>
                 <div class="modal-eyebrow">Замовлення</div>
-                <h2 class="modal-title" id="order-modal-title">Нове замовлення</h2>
+                <h2 class="modal-title" id="order-modal-title">
+                    {% if order_form_values.get('order_id') %}Редагування замовлення{% else %}Нове замовлення{% endif %}
+                </h2>
             </div>
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body form-grid cols1" id="order-form">
-            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="action" value="{{ 'update' if order_form_values.get('order_id') else 'create' }}">
+            <input type="hidden" name="order_id" value="{{ order_form_values.get('order_id', '') }}">
             {% if order_form_error %}
                 <div class="alert alert-warn full" role="alert">{{ order_form_error }}</div>
             {% endif %}
@@ -242,7 +256,9 @@
 
             <div class="modal-footer">
                 <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>
-                <button class="btn btn-primary" type="submit">Оформити замовлення</button>
+                <button class="btn btn-primary" type="submit">
+                    {% if order_form_values.get('order_id') %}Зберегти зміни{% else %}Оформити замовлення{% endif %}
+                </button>
             </div>
         </form>
     </div>

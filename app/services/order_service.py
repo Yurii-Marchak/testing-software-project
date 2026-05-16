@@ -37,6 +37,19 @@ class OrderService:
     def list_orders(self) -> list[OrderSummary]:
         return [self._build_order_summary(row) for row in self.order_repository.list_all()]
 
+    def get_order_form_values(self, order_id: int) -> dict[str, str] | None:
+        row = self.order_repository.get_by_id(order_id)
+        if row is None:
+            return None
+        return {
+            "order_id": str(row[0]),
+            "client_id": str(row[1]),
+            "pc_build_id": str(row[2]),
+            "production_time": str(row[3]),
+            "payment_status": str(row[5]),
+            "order_status": str(row[7]),
+        }
+
     def build_dashboard_stats(self, clients_count: int, builds_count: int) -> DashboardStats:
         orders = self.list_orders()
         unpaid_count = sum(1 for order in orders if order.payment_status == self.UNPAID_STATUS)
@@ -57,6 +70,29 @@ class OrderService:
         self._persist_order(order_request, order_date, due_amount)
         component_summary = self._get_component_summary(order_request.pc_build_id)
         return self._build_receipt(order_date, due_amount, component_summary)
+
+    def update_order(self, order_id: int, order_request: OrderRequest) -> None:
+        existing_order = self.order_repository.get_by_id(order_id)
+        if existing_order is None:
+            raise ApplicationError("Замовлення не знайдено.")
+        self._ensure_client_exists(order_request.client_id)
+        total_price = self._get_total_price(order_request.pc_build_id)
+        self._validate_order_request(order_request)
+        due_amount = self._calculate_due_amount(total_price, order_request.payment_status)
+        self.order_repository.update(
+            order_id=order_id,
+            client_id=order_request.client_id,
+            pc_build_id=order_request.pc_build_id,
+            production_time=order_request.production_time,
+            payment_status=order_request.payment_status,
+            due_amount=due_amount,
+            order_status=order_request.order_status,
+        )
+
+    def delete_order(self, order_id: int) -> None:
+        if self.order_repository.get_by_id(order_id) is None:
+            raise ApplicationError("Замовлення не знайдено.")
+        self.order_repository.delete(order_id)
 
     def _build_order_summary(self, row: tuple) -> OrderSummary:
         client = self.client_repository.get_by_id(int(row[1]))
