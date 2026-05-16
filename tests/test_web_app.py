@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from app.config import DatabaseConfig
 from app.models import BuildSummary, ClientSummary, DashboardStats, OrderSummary
 from app.web.app import create_web_app
@@ -108,6 +110,14 @@ def build_test_app(monkeypatch):
     return app, fake_pc_build_service, fake_order_service
 
 
+def future_deadline(days: int = 5) -> str:
+    return (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M")
+
+
+def past_deadline(days: int = 1) -> str:
+    return (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M")
+
+
 def test_home_page_returns_200(monkeypatch):
     app, _, _ = build_test_app(monkeypatch)
 
@@ -210,7 +220,7 @@ def test_orders_post_redirects_and_stores_receipt_in_session(monkeypatch):
             data={
                 "client_id": "1",
                 "pc_build_id": "1",
-                "production_time": "5",
+                "production_deadline": future_deadline(),
                 "payment_status": "paid",
                 "order_status": "ready",
             },
@@ -239,7 +249,7 @@ def test_orders_redirect_page_renders_receipt(monkeypatch):
             data={
                 "client_id": "1",
                 "pc_build_id": "1",
-                "production_time": "5",
+                "production_deadline": future_deadline(),
                 "payment_status": "paid",
                 "order_status": "ready",
             },
@@ -250,6 +260,29 @@ def test_orders_redirect_page_renders_receipt(monkeypatch):
     page = response.get_data(as_text=True)
     assert "Чек останньої операції" in page
     assert "RTX 4070" in page
+
+
+def test_orders_post_rejects_past_deadline_without_500(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.post(
+            "/orders",
+            data={
+                "client_id": "1",
+                "pc_build_id": "1",
+                "production_deadline": past_deadline(),
+                "payment_status": "paid",
+                "order_status": "ready",
+            },
+            follow_redirects=True,
+        )
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Дата завершення зборки має бути пізнішою за поточний момент." in page
+    assert 'data-open-order-modal="1"' in page
+    assert 'value="paid"' in page
 
 
 def test_custom_404_page_is_returned(monkeypatch):

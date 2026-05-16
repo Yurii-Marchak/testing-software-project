@@ -76,7 +76,7 @@ export function initOrderPreview() {
     const render = () => {
         const client = findById(clients, document.getElementById("order-client-id")?.value);
         const build = findById(builds, document.getElementById("order-build-id")?.value);
-        const productionTime = document.getElementById("production_time")?.value;
+        const productionDeadline = document.getElementById("production_deadline")?.value;
         const paymentStatus = document.getElementById("payment_status")?.value;
         const orderStatus = document.getElementById("order_status")?.value;
 
@@ -89,13 +89,15 @@ export function initOrderPreview() {
         }
 
         const dueAmount = paymentStatus === "unpaid" ? Number(build.price || 0) : 0;
+        const estimatedDays = calculateEstimatedDays(productionDeadline);
         preview.innerHTML = `
             <div class="preview-title">Замовлення для ${client.full_name}</div>
             <div class="preview-list">
                 <div class="preview-row"><span>Телефон</span><span>${client.phone}</span></div>
                 <div class="preview-row"><span>Збірка</span><span>${build.build_type} · ${build.gpu_name}</span></div>
                 <div class="preview-row"><span>Орієнтовна ціна</span><span>${Number(build.price || 0).toFixed(2)} грн</span></div>
-                <div class="preview-row"><span>Час зборки</span><span>${productionTime || "—"} дн.</span></div>
+                <div class="preview-row"><span>Завершення</span><span>${formatDeadline(productionDeadline)}</span></div>
+                <div class="preview-row"><span>Оцінка тривалості</span><span>${estimatedDays}</span></div>
                 <div class="preview-row"><span>Статус оплати</span><span>${paymentStatusLabels[paymentStatus] || "—"}</span></div>
                 <div class="preview-row"><span>Статус замовлення</span><span>${orderStatusLabels[orderStatus] || "—"}</span></div>
                 <div class="preview-row total"><span>Сума до сплати</span><span>${dueAmount.toFixed(2)} грн</span></div>
@@ -105,4 +107,35 @@ export function initOrderPreview() {
 
     controls.forEach((control) => control.addEventListener("input", render));
     controls.forEach((control) => control.addEventListener("change", render));
+}
+
+function calculateEstimatedDays(deadlineValue) {
+    if (!deadlineValue) return "—";
+
+    const deadline = new Date(deadlineValue);
+    const now = new Date();
+    const diffMs = deadline.getTime() - now.getTime();
+    if (Number.isNaN(deadline.getTime()) || diffMs <= 0) {
+        return "—";
+    }
+
+    const days = Math.max(1, Math.ceil(diffMs / 86400000));
+    return `${days} дн.`;
+}
+
+function formatDeadline(deadlineValue) {
+    if (!deadlineValue) return "—";
+
+    const deadline = new Date(deadlineValue);
+    if (Number.isNaN(deadline.getTime())) {
+        return "—";
+    }
+
+    return deadline.toLocaleString("uk-UA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 }

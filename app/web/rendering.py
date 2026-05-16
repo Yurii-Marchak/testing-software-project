@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
 from flask import render_template
@@ -59,7 +60,10 @@ class PageRenderer:
         selected_client: dict | None = None,
         created_client_id: str = "",
         open_order_modal: bool = False,
+        order_form_error: str = "",
+        order_form_values: dict[str, str] | None = None,
     ) -> str:
+        now = datetime.now()
         all_clients = self.services.client_service.list_clients()
         builds_list = self.services.pc_build_service.list_builds()
         orders_list = self.services.order_service.list_orders()
@@ -79,6 +83,10 @@ class PageRenderer:
             selected_client=selected_client,
             created_client_id=created_client_id,
             open_order_modal=open_order_modal,
+            order_form_error=order_form_error,
+            order_form_values=order_form_values or {},
+            min_production_deadline=now.strftime("%Y-%m-%dT%H:%M"),
+            max_production_deadline=(now + timedelta(days=365)).strftime("%Y-%m-%dT%H:%M"),
             clients_json=serialize_clients(all_clients),
             builds_json=[
                 {

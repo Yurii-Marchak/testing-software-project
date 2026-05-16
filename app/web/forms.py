@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import datetime
+from math import ceil
 
 from app.models import ClientRegistration, OrderRequest, PcBuildRequest
 
@@ -21,10 +23,24 @@ def parse_build_form(form: Mapping[str, str]) -> PcBuildRequest | str:
 
 
 def parse_order_form(form: Mapping[str, str]) -> OrderRequest | str:
+    production_deadline_raw = form.get("production_deadline", "").strip()
+    if not production_deadline_raw:
+        return "Оберіть дату та час завершення зборки."
+
     try:
-        production_time = int(form.get("production_time", ""))
+        production_deadline = datetime.fromisoformat(production_deadline_raw)
     except ValueError:
-        return "Час зборки має бути числом."
+        return "Вкажіть коректну дату та час завершення зборки."
+
+    now = datetime.now()
+    delta_seconds = (production_deadline - now).total_seconds()
+    if delta_seconds <= 0:
+        return "Дата завершення зборки має бути пізнішою за поточний момент."
+
+    max_days = 365
+    production_time = max(1, ceil(delta_seconds / 86400))
+    if production_time > max_days:
+        return "Дата завершення зборки має бути в межах 365 днів від сьогодні."
 
     try:
         return OrderRequest(

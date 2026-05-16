@@ -175,13 +175,16 @@
         </div>
         <form method="post" class="modal-body form-grid cols1" id="order-form">
             <input type="hidden" name="action" value="create">
+            {% if order_form_error %}
+                <div class="alert alert-warn full" role="alert">{{ order_form_error }}</div>
+            {% endif %}
 
             <div class="form-group full">
                 <label for="order-client-id">Клієнт</label>
                 <select id="order-client-id" name="client_id" required data-order-control="client_id">
                     <option value="">— Оберіть клієнта —</option>
                     {% for client in all_clients %}
-                        <option value="{{ client.client_id }}">#{{ client.client_id }} · {{ client.full_name }} · {{ client.phone }}</option>
+                        <option value="{{ client.client_id }}" {% if order_form_values.get('client_id') == client.client_id|string %}selected{% endif %}>#{{ client.client_id }} · {{ client.full_name }} · {{ client.phone }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -191,15 +194,24 @@
                 <select id="order-build-id" name="pc_build_id" required data-order-control="pc_build_id">
                     <option value="">— Оберіть збірку —</option>
                     {% for build in builds %}
-                        <option value="{{ build.build_id }}">{{ build.label }}</option>
+                        <option value="{{ build.build_id }}" {% if order_form_values.get('pc_build_id') == build.build_id|string %}selected{% endif %}>{{ build.label }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="production_time">Час зборки (днів)</label>
-                    <input id="production_time" name="production_time" type="number" min="1" step="1" required data-order-control="production_time">
+                    <label for="production_deadline">Дата та час завершення</label>
+                    <input
+                        id="production_deadline"
+                        name="production_deadline"
+                        type="datetime-local"
+                        value="{{ order_form_values.get('production_deadline', '') }}"
+                        min="{{ min_production_deadline }}"
+                        max="{{ max_production_deadline }}"
+                        required
+                        data-order-control="production_deadline"
+                    >
                 </div>
 
                 <div class="form-group">
@@ -207,7 +219,7 @@
                     <select id="payment_status" name="payment_status" required data-order-control="payment_status">
                         <option value="">— Оберіть статус —</option>
                         {% for status in payment_statuses %}
-                            <option value="{{ status }}">{{ payment_status_labels[status] }}</option>
+                            <option value="{{ status }}" {% if order_form_values.get('payment_status') == status %}selected{% endif %}>{{ payment_status_labels[status] }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -218,7 +230,7 @@
                 <select id="order_status" name="order_status" required data-order-control="order_status">
                     <option value="">— Оберіть статус —</option>
                     {% for status in order_statuses %}
-                        <option value="{{ status }}">{{ order_status_labels[status] }}</option>
+                        <option value="{{ status }}" {% if order_form_values.get('order_status') == status %}selected{% endif %}>{{ order_status_labels[status] }}</option>
                     {% endfor %}
                 </select>
             </div>
