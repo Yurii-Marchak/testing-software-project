@@ -26,13 +26,22 @@ class PageRenderer:
             order_status_labels=self.services.order_service.ORDER_STATUS_LABELS,
         )
 
-    def render_clients(self, preset_phone: str = "") -> str:
+    def render_clients(
+        self,
+        preset_phone: str = "",
+        client_form_error: str = "",
+        client_form_values: dict[str, str] | None = None,
+        open_client_modal: bool = False,
+    ) -> str:
         client_rows = self.services.client_service.list_clients()
         return self._render(
             "clients.html",
             clients=client_rows,
             clients_json=serialize_clients(client_rows),
             preset_phone=preset_phone,
+            client_form_error=client_form_error,
+            client_form_values=client_form_values or {},
+            open_client_modal=open_client_modal,
         )
 
     def render_builds(self) -> str:

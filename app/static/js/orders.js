@@ -1,6 +1,12 @@
 import { openModalById } from "./modals.js";
 
 export function initClientModalFromUrl() {
+    const meta = document.getElementById("clients-page-meta");
+    if (meta && meta.dataset.openClientModal === "1") {
+        openModalById("client-modal");
+        return;
+    }
+
     if (window.location.search.includes("phone=")) {
         const button = document.querySelector('[data-open-modal="client-modal"]');
         button?.click();

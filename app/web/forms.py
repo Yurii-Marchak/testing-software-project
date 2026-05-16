@@ -38,13 +38,49 @@ def parse_order_form(form: Mapping[str, str]) -> OrderRequest | str:
         return "Оберіть клієнта та збірку зі списків."
 
 
-def validate_client_form(registration: ClientRegistration) -> str | None:
-    if not registration.full_name:
-        return "Вкажіть ПІБ клієнта."
+def build_client_registration(form: Mapping[str, str]) -> tuple[ClientRegistration, dict[str, str]]:
+    last_name = form.get("last_name", "").strip()
+    first_name = form.get("first_name", "").strip()
+    birth_date = form.get("birth_date", "").strip()
+    email = form.get("email", "").strip()
+    phone = form.get("phone", "").strip()
+
+    full_name = " ".join(part for part in (last_name, first_name) if part).strip()
+    registration = ClientRegistration(
+        full_name=full_name,
+        birth_date=birth_date,
+        email=email,
+        phone=phone,
+    )
+    form_values = {
+        "last_name": last_name,
+        "first_name": first_name,
+        "birth_date": birth_date,
+        "email": email,
+        "phone": phone,
+    }
+    return registration, form_values
+
+
+def validate_client_form(registration: ClientRegistration, form_values: Mapping[str, str] | None = None) -> str | None:
+    values = form_values or {}
+    last_name = values.get("last_name", "").strip()
+    first_name = values.get("first_name", "").strip()
+
+    if not last_name:
+        return "Вкажіть прізвище клієнта."
+    if not first_name:
+        return "Вкажіть ім'я клієнта."
     if not registration.birth_date:
         return "Вкажіть дату народження."
     if not registration.email:
         return "Вкажіть email клієнта."
     if not registration.phone:
         return "Вкажіть номер телефону клієнта."
+    if len(registration.full_name) > 255:
+        return "Ім'я та прізвище разом не повинні перевищувати 255 символів."
+    if len(registration.email) > 255:
+        return "Email не повинен перевищувати 255 символів."
+    if len(registration.phone) > 15:
+        return "Номер телефону не повинен перевищувати 15 символів."
     return None

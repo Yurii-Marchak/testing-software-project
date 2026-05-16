@@ -15,7 +15,7 @@
         <div class="toolbar">
             <div class="toolbar-field">
                 <label for="clients-search">Пошук</label>
-                <input id="clients-search" type="search" placeholder="Пошук за ПІБ, email або телефоном" data-table-filter="clients-table">
+                <input id="clients-search" type="search" placeholder="Пошук за прізвищем, ім'ям, email або телефоном" data-table-filter="clients-table">
             </div>
         </div>
     </div>
@@ -24,7 +24,8 @@
             <thead>
                 <tr>
                     <th data-sort="number">#</th>
-                    <th data-sort="text">ПІБ</th>
+                    <th data-sort="text">Прізвище</th>
+                    <th data-sort="text">Ім'я</th>
                     <th data-sort="text">Дата народження</th>
                     <th data-sort="text">Email</th>
                     <th data-sort="text">Телефон</th>
@@ -32,16 +33,18 @@
             </thead>
             <tbody>
                 {% for client in clients %}
+                    {% set name_parts = client.full_name.split(" ", 1) %}
                     <tr>
                         <td data-label="#" data-sort-value="{{ client.client_id }}"><span class="id-badge">#{{ client.client_id }}</span></td>
-                        <td data-label="ПІБ">{{ client.full_name }}</td>
+                        <td data-label="Прізвище">{{ name_parts[0] }}</td>
+                        <td data-label="Ім'я">{{ name_parts[1] if name_parts|length > 1 else "" }}</td>
                         <td data-label="Дата народження" data-sort-value="{{ client.birth_date }}"><span class="mono-val">{{ client.birth_date }}</span></td>
                         <td data-label="Email">{{ client.email }}</td>
                         <td data-label="Телефон"><span class="mono-val">{{ client.phone }}</span></td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <div class="empty-icon">👤</div>
                                 <p>Клієнтів ще немає. Почніть із кнопки “Новий клієнт”.</p>
@@ -55,6 +58,7 @@
 </section>
 
 <script id="clients-json" type="application/json">{{ clients_json|tojson }}</script>
+<div id="clients-page-meta" data-open-client-modal="{{ '1' if open_client_modal else '0' }}"></div>
 {% endblock %}
 
 {% block modals %}
@@ -68,21 +72,30 @@
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body form-grid cols1">
-            <div class="form-group full">
-                <label for="full_name">Повне ПІБ</label>
-                <input id="full_name" name="full_name" type="text" required>
+            {% if client_form_error %}
+                <div class="alert alert-warn full" role="alert">{{ client_form_error }}</div>
+            {% endif %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="last_name">Прізвище</label>
+                    <input id="last_name" name="last_name" type="text" value="{{ client_form_values.get('last_name', '') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="first_name">Ім'я</label>
+                    <input id="first_name" name="first_name" type="text" value="{{ client_form_values.get('first_name', '') }}" required>
+                </div>
             </div>
             <div class="form-group">
                 <label for="birth_date">Дата народження</label>
-                <input id="birth_date" name="birth_date" type="date" required>
+                <input id="birth_date" name="birth_date" type="date" value="{{ client_form_values.get('birth_date', '') }}" required>
             </div>
             <div class="form-group">
                 <label for="phone">Телефон</label>
-                <input id="phone" name="phone" type="text" value="{{ preset_phone }}" required>
+                <input id="phone" name="phone" type="text" value="{{ client_form_values.get('phone', preset_phone) }}" required>
             </div>
             <div class="form-group full">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" required>
+                <input id="email" name="email" type="email" value="{{ client_form_values.get('email', '') }}" required>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>

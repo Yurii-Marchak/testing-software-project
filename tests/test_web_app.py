@@ -117,6 +117,18 @@ def test_home_page_returns_200(monkeypatch):
     assert response.status_code == 200
 
 
+def test_clients_page_shows_split_name_columns(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.get("/clients")
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Прізвище" in page
+    assert "Ім'я" in page
+
+
 def test_clients_post_redirects_after_success(monkeypatch):
     app, _, _ = build_test_app(monkeypatch)
 
@@ -124,7 +136,8 @@ def test_clients_post_redirects_after_success(monkeypatch):
         response = client.post(
             "/clients",
             data={
-                "full_name": "Іван Петренко",
+                "last_name": "Петренко",
+                "first_name": "Іван",
                 "birth_date": "1990-01-01",
                 "email": "ivan@example.com",
                 "phone": "+380501234567",
@@ -133,6 +146,28 @@ def test_clients_post_redirects_after_success(monkeypatch):
 
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/clients")
+
+
+def test_clients_post_renders_inline_error_and_keeps_modal_open(monkeypatch):
+    app, _, _ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.post(
+            "/clients",
+            data={
+                "last_name": "",
+                "first_name": "Іван",
+                "birth_date": "1990-01-01",
+                "email": "ivan@example.com",
+                "phone": "+380501234567",
+            },
+        )
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Вкажіть прізвище клієнта." in page
+    assert 'data-open-client-modal="1"' in page
+    assert 'value="Іван"' in page
 
 
 def test_orders_page_returns_200(monkeypatch):
