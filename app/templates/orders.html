@@ -113,6 +113,7 @@
                                 <div class="table-actions">
                                     <a class="btn btn-ghost btn-sm" href="{{ url_for('orders', edit_order_id=order.order_id, open_order_modal='1') }}">Редагувати</a>
                                     <form method="post" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="order_id" value="{{ order.order_id }}">
                                         <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
@@ -187,6 +188,7 @@
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body form-grid cols1" id="order-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="{{ 'update' if order_form_values.get('order_id') else 'create' }}">
             <input type="hidden" name="order_id" value="{{ order_form_values.get('order_id', '') }}">
             {% if order_form_error %}

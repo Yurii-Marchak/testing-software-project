@@ -13,8 +13,8 @@
 | `GET, POST` | `/builds` | Список збірок + CRUD збірок |
 | `GET, POST` | `/orders` | Список замовлень + CRUD замовлень |
 | `GET, POST` | `/components` | Каталог компонентів + CRUD компонентів |
-| `GET` | `/debug/error/404` | Тестова сторінка 404 |
-| `GET` | `/debug/error/500` | Тестова сторінка 500 |
+| `GET` | `/error/404` | Тестова сторінка 404 |
+| `GET` | `/error/500` | Тестова сторінка 500 |
 
 ## 3. Маршрут `/`
 
@@ -167,11 +167,11 @@
 Контролер:
 - [debug_controller.py](</e:/якість та тестування пз/project/testing-software-project/app/web/controllers/debug_controller.py:1>)
 
-### `/debug/error/404`
+### `/error/404`
 
 Повертає кастомну `404` сторінку.
 
-### `/debug/error/500`
+### `/error/500`
 
 Повертає кастомну `500` сторінку.
 

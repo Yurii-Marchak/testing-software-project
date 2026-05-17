@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from flask import Flask, request
+import secrets
+
+from flask import Flask, abort, request, session
 
 from app.config import DatabaseConfig, load_app_secret_key
 from app.web.controllers import register_routes
@@ -17,9 +19,12 @@ def create_web_app(config: DatabaseConfig) -> Flask:
     app.config["DATABASE_CONFIG"] = config
     app.config["SECRET_KEY"] = load_app_secret_key()
     app.config["JSON_AS_ASCII"] = False
+    app.config.setdefault("CSRF_ENABLED", True)
 
     @app.before_request
     def before_request() -> None:
+        if request.method == "POST" and app.config.get("CSRF_ENABLED", True):
+            _validate_csrf_token()
         if request.endpoint is None or request.endpoint == "static" or request.endpoint.startswith("debug_"):
             return
         open_request_scope()
@@ -30,7 +35,22 @@ def create_web_app(config: DatabaseConfig) -> Flask:
 
     @app.context_processor
     def inject_navigation() -> dict[str, str]:
-        return {"current_path": request.path}
+        return {"current_path": request.path, "csrf_token": _get_or_create_csrf_token()}
+
+    @app.errorhandler(400)
+    def bad_request(error) -> tuple[str, int]:
+        return render_error_page(
+            "400 | PC Build Manager",
+            "400",
+            "Некоректний запит",
+            "Сервер не зміг обробити цей запит. Спробуйте оновити сторінку та повторити дію ще раз.",
+            accent="amber",
+            eyebrow="Request Rejected",
+            details=(
+                "Форма могла бути відправлена без службового токена безпеки або з невалідними даними.",
+                "Оновіть сторінку, відкрийте форму повторно й спробуйте ще раз.",
+            ),
+        ), 400
 
     @app.errorhandler(404)
     def not_found(error) -> tuple[str, int]:
@@ -64,3 +84,18 @@ def create_web_app(config: DatabaseConfig) -> Flask:
 
     register_routes(app)
     return app
+
+
+def _get_or_create_csrf_token() -> str:
+    csrf_token = session.get("_csrf_token")
+    if not csrf_token:
+        csrf_token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = csrf_token
+    return csrf_token
+
+
+def _validate_csrf_token() -> None:
+    form_token = request.form.get("csrf_token", "")
+    session_token = session.get("_csrf_token", "")
+    if not form_token or not session_token or not secrets.compare_digest(form_token, session_token):
+        abort(400)

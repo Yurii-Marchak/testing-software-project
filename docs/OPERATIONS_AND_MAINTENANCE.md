@@ -55,13 +55,13 @@ py -m pytest -q
 ### Перевірка маршруту 404
 
 ```text
-http://127.0.0.1:5000/debug/error/404
+http://127.0.0.1:5000/error/404
 ```
 
 ### Перевірка маршруту 500
 
 ```text
-http://127.0.0.1:5000/debug/error/500
+http://127.0.0.1:5000/error/500
 ```
 
 ## 6. Типові проблеми
@@ -118,8 +118,8 @@ py -m pytest -q
 - `/builds`
 - `/orders`
 - `/components`
-- `/debug/error/404`
-- `/debug/error/500`
+- `/error/404`
+- `/error/500`
 
 ## 8. Що бажано покращити в майбутньому
 

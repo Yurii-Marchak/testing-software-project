@@ -458,8 +458,8 @@ erDiagram
 - `500 Internal Server Error`
 
 Тестові маршрути:
-- `/debug/error/404`
-- `/debug/error/500`
+- `/error/404`
+- `/error/500`
 
 ## 12. CRUD-можливості
 

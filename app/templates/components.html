@@ -58,6 +58,7 @@
                                 <div class="table-actions">
                                     <a class="btn btn-ghost btn-sm" href="{{ url_for('components', table=section.table_name, edit_component_id=row[0]) }}">Редагувати</a>
                                     <form method="post" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="table_name" value="{{ section.table_name }}">
                                         <input type="hidden" name="component_id" value="{{ row[0] }}">
@@ -103,6 +104,7 @@
         </div>
         {% if selected_component_config %}
             <form method="post" class="modal-body form-grid cols1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="action" value="{{ 'update' if component_form_values.get('component_id') else 'create' }}">
                 <input type="hidden" name="component_id" value="{{ component_form_values.get('component_id', '') }}">
                 <input type="hidden" name="table_name" value="{{ selected_component_table }}">

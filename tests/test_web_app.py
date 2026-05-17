@@ -226,6 +226,7 @@ def build_test_app(monkeypatch):
 
     app = create_web_app(DatabaseConfig("localhost", "root", "secret", "lab7"))
     app.config["TESTING"] = True
+    app.config["CSRF_ENABLED"] = False
     return app, fake_client_service, fake_component_service, fake_pc_build_service, fake_order_service
 
 

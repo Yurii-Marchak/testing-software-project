@@ -66,10 +66,10 @@ class OrderService:
         self._validate_order_request(order_request)
         due_amount = self._calculate_due_amount(total_price, order_request.payment_status)
         order_date = date.today()
-
-        self._persist_order(order_request, order_date, due_amount)
         component_summary = self._get_component_summary(order_request.pc_build_id)
-        return self._build_receipt(order_date, due_amount, component_summary)
+        receipt = self._build_receipt(order_date, due_amount, component_summary)
+        self._persist_order_transactionally(order_request, order_date, due_amount)
+        return receipt
 
     def update_order(self, order_id: int, order_request: OrderRequest) -> None:
         existing_order = self.order_repository.get_by_id(order_id)
@@ -136,16 +136,35 @@ class OrderService:
     def _calculate_due_amount(self, total_price: float, payment_status: str) -> float:
         return total_price if payment_status == self.UNPAID_STATUS else 0.0
 
-    def _persist_order(self, order_request: OrderRequest, order_date: date, due_amount: float) -> None:
-        self.order_repository.create(
-            client_id=order_request.client_id,
-            pc_build_id=order_request.pc_build_id,
-            production_time=order_request.production_time,
-            order_date=order_date,
-            payment_status=order_request.payment_status,
-            due_amount=due_amount,
-            order_status=order_request.order_status,
-        )
+    def _persist_order_transactionally(self, order_request: OrderRequest, order_date: date, due_amount: float) -> None:
+        if not hasattr(self.order_repository, "connection") or not hasattr(self.order_repository, "create_without_commit"):
+            self.order_repository.create(
+                client_id=order_request.client_id,
+                pc_build_id=order_request.pc_build_id,
+                production_time=order_request.production_time,
+                order_date=order_date,
+                payment_status=order_request.payment_status,
+                due_amount=due_amount,
+                order_status=order_request.order_status,
+            )
+            return
+
+        connection = self.order_repository.connection
+        try:
+            connection.begin()
+            self.order_repository.create_without_commit(
+                client_id=order_request.client_id,
+                pc_build_id=order_request.pc_build_id,
+                production_time=order_request.production_time,
+                order_date=order_date,
+                payment_status=order_request.payment_status,
+                due_amount=due_amount,
+                order_status=order_request.order_status,
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
 
     def _get_component_summary(self, build_id: int) -> tuple:
         component_summary = self.pc_build_repository.get_component_summary(build_id)

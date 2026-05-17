@@ -12,7 +12,7 @@ def create_connection(config: DatabaseConfig) -> Connection | None:
             user=config.user,
             password=config.password,
             database=config.database,
-            charset='utf8mb4'
+            charset="utf8mb4",
         )
     except MySQLError as error:
         print("Помилка підключення до бази даних:", error)

@@ -1,4 +1,5 @@
 import os
+import secrets
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,7 +31,10 @@ def load_database_config() -> DatabaseConfig:
 
 def load_app_secret_key() -> str:
     _load_dotenv()
-    return _normalize_env_value(os.getenv("APP_SECRET_KEY", "pc-build-studio-local"))
+    configured_secret = _normalize_env_value(os.getenv("APP_SECRET_KEY", ""))
+    if configured_secret:
+        return configured_secret
+    return secrets.token_urlsafe(32)
 
 
 def _load_dotenv() -> None:

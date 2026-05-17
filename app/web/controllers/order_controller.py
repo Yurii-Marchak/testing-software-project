@@ -79,10 +79,11 @@ def _save_order(current_services, phone_query: str, receipt, selected_client, cr
             flash("Замовлення успішно оновлено.", "success")
             return redirect(url_for("orders"))
 
-        created_receipt = current_services.order_service.create_order(order_request)
         created_client = current_services.client_service.get_client(order_request.client_id)
+        created_receipt = current_services.order_service.create_order(order_request)
         session["last_receipt"] = serialize_receipt(created_receipt)
-        session["last_selected_client"] = serialize_client(created_client)
+        if created_client is not None:
+            session["last_selected_client"] = serialize_client(created_client)
         flash("Замовлення успішно оформлено.", "success")
         return redirect(url_for("orders"))
     except (ApplicationError, MySQLError) as error:

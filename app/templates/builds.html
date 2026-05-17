@@ -51,6 +51,7 @@
                             <div class="table-actions">
                                 <a class="btn btn-ghost btn-sm" href="{{ url_for('builds', edit_build_id=build.build_id) }}">Редагувати</a>
                                 <form method="post" class="inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="build_id" value="{{ build.build_id }}">
                                     <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
@@ -90,6 +91,7 @@
             <button class="modal-close" type="button" data-close-modal aria-label="Закрити вікно">✕</button>
         </div>
         <form method="post" class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="action" value="{{ 'update' if build_form_values.get('build_id') else 'create' }}">
             <input type="hidden" name="build_id" value="{{ build_form_values.get('build_id', '') }}">
             {% if build_form_error %}
