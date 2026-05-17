@@ -299,6 +299,48 @@ def test_clients_post_renders_inline_error_and_keeps_modal_open(monkeypatch):
     assert 'value="Іван"' in page
 
 
+def test_clients_post_rejects_invalid_email(monkeypatch):
+    app, *_ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.post(
+            "/clients",
+            data={
+                "last_name": "Петренко",
+                "first_name": "Іван",
+                "birth_date": "1990-01-01",
+                "email": "ivan@example",
+                "phone": "+380501234567",
+            },
+        )
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Вкажіть коректний email у форматі name@example.com." in page
+    assert 'data-open-client-modal="1"' in page
+
+
+def test_clients_post_rejects_invalid_phone(monkeypatch):
+    app, *_ = build_test_app(monkeypatch)
+
+    with app.test_client() as client:
+        response = client.post(
+            "/clients",
+            data={
+                "last_name": "Петренко",
+                "first_name": "Іван",
+                "birth_date": "1990-01-01",
+                "email": "ivan@example.com",
+                "phone": "0501234567",
+            },
+        )
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "Вкажіть телефон у форматі +380XXXXXXXXX." in page
+    assert 'data-open-client-modal="1"' in page
+
+
 def test_client_update_and_delete_routes(monkeypatch):
     app, fake_client_service, *_ = build_test_app(monkeypatch)
 

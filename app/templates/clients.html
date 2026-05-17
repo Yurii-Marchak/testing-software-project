@@ -93,24 +93,46 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="last_name">Прізвище</label>
-                    <input id="last_name" name="last_name" type="text" value="{{ client_form_values.get('last_name', '') }}" required>
+                    <input id="last_name" name="last_name" type="text" value="{{ client_form_values.get('last_name', '') }}" autocomplete="family-name" required>
                 </div>
                 <div class="form-group">
                     <label for="first_name">Ім'я</label>
-                    <input id="first_name" name="first_name" type="text" value="{{ client_form_values.get('first_name', '') }}" required>
+                    <input id="first_name" name="first_name" type="text" value="{{ client_form_values.get('first_name', '') }}" autocomplete="given-name" required>
                 </div>
             </div>
             <div class="form-group">
                 <label for="birth_date">Дата народження</label>
-                <input id="birth_date" name="birth_date" type="date" value="{{ client_form_values.get('birth_date', '') }}" required>
+                <input id="birth_date" name="birth_date" type="date" value="{{ client_form_values.get('birth_date', '') }}" autocomplete="bday" required>
             </div>
             <div class="form-group">
                 <label for="phone">Телефон</label>
-                <input id="phone" name="phone" type="text" value="{{ client_form_values.get('phone', preset_phone) }}" required>
+                <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value="{{ client_form_values.get('phone', preset_phone) }}"
+                    placeholder="+380501234567"
+                    pattern="^\+380\d{9}$"
+                    title="Введіть телефон у форматі +380XXXXXXXXX"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    required
+                >
             </div>
             <div class="form-group full">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" value="{{ client_form_values.get('email', '') }}" required>
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value="{{ client_form_values.get('email', '') }}"
+                    placeholder="name@example.com"
+                    pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+                    title="Введіть коректний email у форматі name@example.com"
+                    autocomplete="email"
+                    inputmode="email"
+                    required
+                >
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" type="button" data-close-modal>Скасувати</button>

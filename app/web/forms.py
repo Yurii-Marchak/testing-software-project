@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import datetime
 from math import ceil
 
 from app.models import ClientRegistration, OrderRequest, PcBuildRequest
+
+PHONE_REGEX = re.compile(r"^\+380\d{9}$")
+EMAIL_REGEX = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 
 
 def parse_build_form(form: Mapping[str, str]) -> PcBuildRequest | str:
@@ -91,12 +95,16 @@ def validate_client_form(registration: ClientRegistration, form_values: Mapping[
         return "Вкажіть дату народження."
     if not registration.email:
         return "Вкажіть email клієнта."
+    if not EMAIL_REGEX.fullmatch(registration.email):
+        return "Вкажіть коректний email у форматі name@example.com."
     if not registration.phone:
         return "Вкажіть номер телефону клієнта."
+    if not PHONE_REGEX.fullmatch(registration.phone):
+        return "Вкажіть телефон у форматі +380XXXXXXXXX."
     if len(registration.full_name) > 255:
         return "Ім'я та прізвище разом не повинні перевищувати 255 символів."
     if len(registration.email) > 255:
         return "Email не повинен перевищувати 255 символів."
-    if len(registration.phone) > 15:
-        return "Номер телефону не повинен перевищувати 15 символів."
+    if len(registration.phone) > 13:
+        return "Номер телефону не повинен перевищувати 13 символів."
     return None
