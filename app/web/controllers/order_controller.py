@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from flask import flash, redirect, request, session, url_for
 from pymysql.err import MySQLError
@@ -117,6 +117,12 @@ def _build_edit_order_values(current_services, order_id: int) -> dict[str, str]:
         production_days = int(order_values.get("production_time", "1"))
     except ValueError:
         production_days = 1
-    deadline = datetime.now() + timedelta(days=max(1, production_days))
+    try:
+        order_date = date.fromisoformat(order_values.get("order_date", ""))
+    except ValueError:
+        order_date = datetime.now().date()
+    derived_deadline = datetime.combine(order_date + timedelta(days=max(1, production_days)), time(hour=12, minute=0))
+    minimum_deadline = datetime.now() + timedelta(minutes=30)
+    deadline = max(derived_deadline, minimum_deadline)
     order_values["production_deadline"] = deadline.strftime("%Y-%m-%dT%H:%M")
     return order_values

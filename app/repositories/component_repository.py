@@ -71,14 +71,16 @@ class ComponentRepository:
 
     def list_all(self, table_name: str) -> tuple[tuple, ...]:
         self._validate_table_name(table_name)
+        columns = ", ".join(("id",) + self.TABLE_FIELDS[table_name])
         with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM {table_name}")
+            cursor.execute(f"SELECT {columns} FROM {table_name}")
             return cursor.fetchall()
 
     def get_by_id(self, table_name: str, component_id: int) -> tuple | None:
         self._validate_table_name(table_name)
+        columns = ", ".join(("id",) + self.TABLE_FIELDS[table_name])
         with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM {table_name} WHERE id = %s", (component_id,))
+            cursor.execute(f"SELECT {columns} FROM {table_name} WHERE id = %s", (component_id,))
             return cursor.fetchone()
 
     def create(self, table_name: str, values: dict[str, object]) -> None:

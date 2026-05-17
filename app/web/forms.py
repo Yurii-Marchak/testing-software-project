@@ -4,11 +4,13 @@ import re
 from collections.abc import Mapping
 from datetime import datetime
 from math import ceil
+from zoneinfo import ZoneInfo
 
 from app.models import ClientRegistration, OrderRequest, PcBuildRequest
 
 PHONE_REGEX = re.compile(r"^\+380\d{9}$")
 EMAIL_REGEX = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+APP_TIMEZONE = ZoneInfo("Europe/Kyiv")
 
 
 def parse_build_form(form: Mapping[str, str]) -> PcBuildRequest | str:
@@ -32,11 +34,11 @@ def parse_order_form(form: Mapping[str, str]) -> OrderRequest | str:
         return "Оберіть дату та час завершення збірки."
 
     try:
-        production_deadline = datetime.fromisoformat(production_deadline_raw)
+        production_deadline = datetime.fromisoformat(production_deadline_raw).replace(tzinfo=APP_TIMEZONE)
     except ValueError:
         return "Вкажіть коректну дату та час завершення збірки."
 
-    now = datetime.now()
+    now = datetime.now(APP_TIMEZONE)
     delta_seconds = (production_deadline - now).total_seconds()
     if delta_seconds <= 0:
         return "Дата завершення збірки має бути пізнішою за поточний момент."

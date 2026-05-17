@@ -59,13 +59,22 @@ class PcBuildRepository:
         self.connection.commit()
 
     def list_all(self) -> tuple[tuple, ...]:
+        query = """
+            SELECT id, gpu_id, cpu_id, motherboard_id, ram_id, psu_id, pc_case_id, total_price, build_type
+            FROM PC_Build
+        """
         with self.connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM PC_Build")
+            cursor.execute(query)
             return cursor.fetchall()
 
     def get_by_id(self, build_id: int) -> tuple | None:
+        query = """
+            SELECT id, gpu_id, cpu_id, motherboard_id, ram_id, psu_id, pc_case_id, total_price, build_type
+            FROM PC_Build
+            WHERE id = %s
+        """
         with self.connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM PC_Build WHERE id = %s", (build_id,))
+            cursor.execute(query, (build_id,))
             return cursor.fetchone()
 
     def get_total_price(self, build_id: int) -> float | None:

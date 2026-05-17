@@ -46,6 +46,7 @@ class OrderService:
             "client_id": str(row[1]),
             "pc_build_id": str(row[2]),
             "production_time": str(row[3]),
+            "order_date": str(row[4]),
             "payment_status": str(row[5]),
             "order_status": str(row[7]),
         }
